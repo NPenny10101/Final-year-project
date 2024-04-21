@@ -1,4 +1,4 @@
-const { lighthouse, loadConfig } = require('lighthouse');
+/* const { lighthouse, loadConfig } = require('lighthouse');
 const chromeLauncher = require('chrome-launcher');
 const fs = require('fs');
 
@@ -25,3 +25,4 @@ async function runLighthouse(url) {
 // Example usage
 const url = 'https://example.com';
 runLighthouse(url);
+ */

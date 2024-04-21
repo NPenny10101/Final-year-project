@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       exit();
   }
 
-  // Check if URL is provided (optional)
+  // Check if URL is provided 
   $url = $_POST['url'] ?? '';
   if (empty($url)) {
       $_SESSION['errors'][] = "Please provide a URL.";
@@ -51,7 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 continue; // Skip processing the header row
             }
 
-            // Group CSV data by an integer value inside the arrays
+            // Group CSV data by an integer value insid
+            
     //        $groupKey = intval($data[0]); // Assuming the integer value is in the first column
     //        if (!isset($csvArray[$groupKey])) {
     //            $csvArray[$groupKey] = array();
@@ -78,8 +79,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
        $dates = [];
        $totalTime = 0;
        $timeOSArray = [];
+       $pageViewsArray = [];
        $totalPageViews = 0;
-    
+
+      $deviceCatagory = [];
+      $medium = [];
+      $browser = [];
+      $subContinent = [];
+      $entryPage = [];
+      $exitPage = [];
+      $searchType = [];
+      $bounceratePages = [];
+
+      $chrome = 0;
+      $IE = 0;
+      $firefox = 0;
+      $safari = 0;
+      $organic = 0;
+      $direct = 0;
+      $paid = 0;
+      $referral = 0;
+      $mobile = 0;
+      $tablet = 0;
+      $desktop = 0;
+      // deviceCategory, source (direct,ask, partners or url), medium (refereal, organic, affiliate none), browser, subContinent, Country, cannelGrouping (organic refereal paid direct) ,entry page, exit page
+
        //for loops to go through each value in the csv array
         foreach ($csvArray as $row) {
             $uniqueVisitorIds[] = $row['fullVisitorId'];
@@ -94,8 +118,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $totalTime = $totalTime + intval($row['timeOnSite']);
                 $timeOSArray[] = intval($row['timeOnSite']);
                 $totalPageViews = $totalPageViews + intval($row['pageviews']);
+                $pageViewsArray[] = intval($row['pageviews']);
                 $realVisits = $realVisits + 1;
+
+                $deviceCatagory[] = $row['deviceCategory'];
+                if($row['browser'] == 'Chrome'){
+                  $chrome = $chrome + 1;
+                }elseif ($row['browser'] == 'Safari'){
+                  $safari = $safari + 1;
+                }elseif ($row['browser'] == 'Firefox'){
+                  $firefox = $firefox + 1;
+                }elseif ($row['browser'] == 'Internet Explorer'){
+                  $IE = $IE + 1;
+                }
+
+                if($row['deviceCategory'] == 'desktop'){
+                  $desktop = $desktop + 1;
+                }elseif ($row['deviceCategory'] == 'mobile'){
+                  $mobile = $mobile + 1;
+                }elseif ($row['deviceCategory'] == 'tablet'){
+                  $tablet = $tablet + 1;
+                }
+
+                if($row['channelGrouping'] == 'Organic Search'){
+                  $organic = $organic + 1;
+                }elseif ($row['channelGrouping'] == 'Referral'){
+                  $referral = $referral + 1;
+                }elseif ($row['channelGrouping'] == 'Paid Search'){
+                  $paid = $paid + 1;
+                }elseif ($row['channelGrouping'] == 'Direct'){
+                  $direct = $direct + 1;
+                }
+
+                $medium[] = $row['medium'];
+                $browser[] = $row['browser'];
+                $country[] = $row['country'];
                 
+                if (isset($csvArray[$c + 1])) {
+                  if($row['isExit'] == true){
+                    $exitPage[] = $row['pageTitle'];
+                  }
+                  if($row['isEntrance'] == true){
+                    $entryPage[] = $row['pageTitle'];
+                  }
+                }
+
+            }
+
+            // if statement to collate all the pages that contribute to the bouncerate and entry and exit pages
+            if($row['isEntrance'] == true && $row['isExit'] == true && $row['bounces'] == 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+              $bounceratePages[] = $row['pageTitle'];
+            }
+
+            if (isset($csvArray[$c + 1])) {
+              if($row['isExit'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+                $exitPage[] = $row['pageTitle'];
+              }
+              if($row['isEntrance'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+                $entryPage[] = $row['pageTitle'];
+              }
             }
 
             foreach ($row as $data){
@@ -130,42 +211,108 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $daysDifference = ceil(($latestTimestamp - $earliestTimestamp) / (60 * 60 * 24));
         $earliestDate = date('Y-m-d', $earliestTimestamp);
 
-        print_r($numUniqueVisitorIds);
-        echo "\n";
-        print_r($numVisits);
-        echo "\n";
-        print_r($bouncerate);
-        echo "\n";
-        print_r($averageTimeOnSite);
-        echo "\n";
-        print_r($averagePageViews);
-        echo "\n";
-        print_r($earliestDate);
-        echo "\n";
-        //print_r($timeOSArray);
 
-        // Function to calculate the standard deviation of an array
+
+
+        //function to count the number of occurances in an array of strings
+        function arrayConverter($arr) {
+          $occurrences = array_count_values($arr);
+          $linkedArray = [];
+          foreach ($occurrences as $item => $count) {
+              $linkedArray[] = ['name' => $item, 'count' => $count];
+          }
+          // Sort the linked array by count in descending order
+          usort($linkedArray, function($a, $b) {
+            return $b['count'] - $a['count'];
+          });
+           // Extract the first name from the linked array and ensuring it is a string
+
+          $firstName = !empty($linkedArray) ? $linkedArray[0]['name'] : '';
+
+          return ['linkedArray' => $linkedArray, 'firstName' => $firstName];
+        }
+
+        $result = arrayConverter($country);
+        $topCountry = $result['firstName'];
+
+        $result = arrayConverter($entryPage);
+        $topEntryPage = $result['firstName'];
+        print_r($topEntryPage);
+
+        $result = arrayConverter($exitPage);
+        $topExitPage = $result['firstName'];
+
+        $result = arrayConverter($bounceratePages);
+        $topBounceratedPage = $result['firstName'];
+
+
+
+
+        // Function to calculate mean
+        function mean($data) {
+          // Filter out non-integer values
+          $filteredData = array_filter($data, 'is_int');
+          return array_sum($filteredData) / count($filteredData);
+        }
+
+
+        // Function to calculate the standard deviation of an array along with the upper and lower bound
         function standardDeviation($arr) {
-          $mean = array_sum($arr) / count($arr);
-          $squaredDeviations = array_map(function($x) use ($mean) {
-              return pow($x - $mean, 2);
-          }, $arr);
-          $variance = sqrt(array_sum($squaredDeviations) / count($arr));
-          $lowerBound = max(0, $mean - $variance);
-          $upperBound = $mean + $variance;
-          return array($lowerBound, $upperBound, $variance);
+            // Filter out non-integer values
+            $filteredArr = array_filter($arr, 'is_int');
+            
+            // Calculate the mean
+            $mean = mean($filteredArr);
+            
+            // Calculate the squared deviations
+            $squaredDeviations = array_map(function($x) use ($mean) {
+                return pow($x - $mean, 2);
+            }, $filteredArr);
+            
+            // Calculate the variance
+            $variance = sqrt(array_sum($squaredDeviations) / count($filteredArr));
+            
+            return $variance;
         }
         
-        $timeSD = standardDeviation($timeOSArray);
+
+        // Function to calculate confidence interval
+        function confidenceInterval($data) {
+            $confidenceLevel = 0.95;
+            $mean = mean($data);
+            $stdDev = standardDeviation($data);
+            $n = count($data);
+            $z = 0; // z-score for 95% confidence level
+            if ($confidenceLevel == 0.95) {
+                $z = 1.96; // For 95% confidence level
+            } else {
+                // You can define z-scores for other confidence levels here
+            }
+            $marginError = $z * ($stdDev / sqrt($n));
+            $lowerBound = $mean - $marginError;
+            $upperBound = $mean + $marginError;
+            return [$lowerBound, $mean, $upperBound];
+        }        
+
+
+   
+        $confidenceInterval = confidenceInterval($timeOSArray);
+
 
         // Calculate the upper and lower bounds
 
-      //  echo "Mean: $averageTimeOnSite\n";
-        print_r($timeSD);
-      // echo "Upper Bound: $timeUpperBound\n";
-       // echo "Lower Bound: $timeLowerBound\n";
+        //  echo "Mean: $averageTimeOnSite\n";
+        // Display confidence interval
+        echo "Confidence Interval: [" . $confidenceInterval[0] . ", " . $confidenceInterval[1] . ", " . $confidenceInterval[2] ."]";
 
-        // exterpolation for the unique visitiors for a monthly total
+
+        //page views standard deviation  
+        //$pageViewsSD = standardDeviation($pageViewsArray);
+
+        //print_r($pageViewsSD);
+
+
+        // extrapolation for the unique visitiors for a monthly total
         $averageVisitorsPerDay = $numVisits / ($daysDifference + 1);
         $averageVisitorsPer30Days =  $averageVisitorsPerDay * 30;
 
@@ -196,36 +343,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
 
-        // URL of the Performance API endpoint
-/*         $api_url = 'https://example.com/performance-api-endpoint';
 
-        // Parameters to be sent in the request
-        $params = [
-            'param1' => 'value1',
-            'param2' => 'value2'
-        ];
-
-        // Build query string
-        $query_string = http_build_query($params);
-
-        // Combine URL with query string
-        $request_url = $api_url . '?' . $query_string;
-
-        // Send HTTP GET request using file_get_contents
-        $response = file_get_contents($request_url);
-
-        // Check if response is received
-        if ($response) {
-            // Process the response (e.g., decode JSON)
-            $data = json_decode($response, true);
-
-            // Display or use the data
-            print_r($data);
-        } else {
-            // Handle error if request fails
-            echo "Error: Unable to fetch data from the Performance API.";
-        }
- */
 
 
         // LIGHTHOUSE REPORT
@@ -278,21 +396,80 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Example URL provided by the user
-        $url = "https://google.com";
+        $url = "https://www.cardiffhalfmarathon.co.uk/";
 
         // Get the performance score for the provided URL
-        $performanceScore = getLighthousePerformanceScore($url);
+        // Function to get performance metrics and accessibility information for a given URL
+        function getPerformanceMetricsFromURL($url) {
+          // Define the command to execute Lighthouse
+          $command = "lighthouse --output=json --output-path=report.json $url";
 
-        // Check if the performance score was retrieved successfully
-        if ($performanceScore !== false) {
-          // Output the performance score
-          echo "Performance Score: " . $performanceScore . "/100";
-        } else {
-          // Report generation failed or performance score not found
-          echo "Failed to retrieve the performance score for the provided URL.";
+          // Execute the command
+          exec($command, $output, $return);
+
+          // Check if Lighthouse command executed successfully
+          if ($return === 0) {
+              // Read the generated report
+              $report = file_get_contents('report.json');
+
+              // Call the function to extract metrics from the report
+              return getPerformanceMetrics($report);
+          } else {
+              // Lighthouse command failed
+              return null;
+          }
         }
-        
-        
+
+        // Function to get performance metrics and accessibility information from a Lighthouse report
+        function getPerformanceMetrics($report) {
+          // Decode the JSON report
+          $reportData = json_decode($report, true);
+      
+          // Initialize an array to store the results
+          $metrics = [];
+      
+          // Check if the report data is valid
+          if ($reportData !== null) {
+              // Extract performance score
+              if (isset($reportData['categories']['performance']['score'])) {
+                  $metrics['performance_score'] = $reportData['categories']['performance']['score'] * 100;
+              } else {
+                  $metrics['performance_score'] = null;
+              }
+      
+              // Extract accessibility score
+              if (isset($reportData['categories']['accessibility']['score'])) {
+                  $metrics['accessibility_score'] = $reportData['categories']['accessibility']['score'] * 100;
+              } else {
+                  $metrics['accessibility_score'] = null;
+              }
+      
+              // Extract accessibility opportunities
+              if (isset($reportData['categories']['accessibility']['auditRefs'])) {
+                  $opportunities = [];
+                  foreach ($reportData['categories']['accessibility']['auditRefs'] as $auditRef) {
+                      // Check if the necessary keys are present before accessing them
+                      if (isset($auditRef['scoreDisplayMode']) && isset($auditRef['result']) && $auditRef['scoreDisplayMode'] === 'manual' && $auditRef['result'] === 'failed') {
+                          $opportunities[] = $auditRef['description'];
+                      }
+                  }
+                  $metrics['accessibility_opportunities'] = $opportunities;
+              } else {
+                  $metrics['accessibility_opportunities'] = [];
+              }
+          } else {
+              // Invalid report data
+              $metrics['performance_score'] = null;
+              $metrics['accessibility_score'] = null;
+              $metrics['accessibility_opportunities'] = [];
+          }
+      
+          return $metrics;
+      }
+
+
+        $lighthouse = getPerformanceMetricsFromURL($url);
+        print_r($lighthouse);
 
 
 
@@ -344,7 +521,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Execute the statement
             $stmt2->execute();
 
-            
+            $report_Id = $conn->insert_id;
+            // Close the statement
+            $stmt2->close();
+
+
+
+            $sql3 = "INSERT INTO `source` (`report_Id`, `direct`, `organic`, `paid`, `referral`, `chrome`, `firefox`, `internetExplorer`, `safari`, `mobile`, `tablet`, `desktop`, `topCountry`, `entry_page`, `exit_page`) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)";
+    
+            //Bind parameters to placeholders
+            $stmt3 = $conn->prepare($sql3);
+            $stmt3->bind_param("iiiiiiiiiiiisss", $report_Id, $direct, $organic, $paid, $referral, $chrome, $firefox, $IE, $safari, $mobile, $tablet, $desktop, $topCountry, $topEntryPage, $topExitPage); // 
+
+            // Execute the statement
+            $stmt3->execute();
+
+            // Close the statement
+            $stmt3->close();
+
         }
 
 /*         $result = mysqli_query($conn, $sql2);
@@ -400,7 +595,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <a class="nav-link active" aria-current="page" href="home.php">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
+          <a class="nav-link" href="history.php">History</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Pricing</a>
@@ -426,19 +621,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="container">
         <div class="block">
-            <h2>Left Block</h2>
+            <h2>Views</h2>
             <p>This is some information about the left block. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis efficitur urna a augue hendrerit tincidunt. Vivamus at elit vel urna dignissim tincidunt non sed mi. Nulla ut massa ipsum.</p>
-        </div>
+            
+          </div>
         <div class="block">
-            <h2>Right Block</h2>
+            <h2>Visitors</h2>
             <p>This is some information about the right block. Phasellus pretium, lorem non ullamcorper fermentum, sapien nunc fermentum lacus, ut bibendum nunc velit nec libero. Fusce vel lorem eget nunc egestas interdum non in lorem.</p>
         </div>
         <div class="block">
-            <h2>Left Block</h2>
-            <p>This is some information about the left block. Curabitur nec ligula et urna tincidunt laoreet. Fusce nec arcu vel enim elementum sollicitudin ac non ipsum. Fusce non libero ut lorem rhoncus mattis.</p>
+            <h2>Bounce Rate</h2>
+            <p>The bounce rate is a metric used to measure the percentage of visitors who land on a single page of a website and then leave without interacting further with the site, a higher percentage means that more people are leaving without any interaction with the website </p>
+              <?php
+              // Sample variable
+              $condition = true;
+
+              // Check the value of the variable and display different content accordingly
+              if ($bouncerate <= 40 ) {
+                  // Display this content if $condition is true
+                  echo "<p>This is a very good bounce rate of $bouncerate </p>";
+              } elseif ($bouncerate > 40 && $bouncerate <= 58) {
+                  // Display this content if $condition is false
+                  echo "<h1>above average bounce rate for a healthcare website</h1>";
+              } elseif ($bouncerate > 58 && $bouncerate <= 65) {
+                // Display this content if $condition is false
+                echo "<h1>just below average for a healthcare website </h1>";
+              } elseif ($bouncerate > 65) {
+                // Display this content if $condition is false
+                echo "<h1> this is a poor performaing bounce rate assuming that the content of the website is not designed for a high bouncerate</h1>";
+              }
+              ?>      
         </div>
         <div class="block">
-            <h2>Right Block</h2>
+            <h2>Referer Type</h2>
             <p>This is some information about the right block. Proin tempor velit vel lorem laoreet, id mattis eros bibendum. Integer fermentum purus non orci venenatis ullamcorper. Phasellus eu purus vel metus bibendum vestibulum.</p>
         </div>
   </div>
