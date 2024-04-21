@@ -2,6 +2,13 @@ body {
     font-family: 'Arial', sans-serif;
     background-color: #f8f8f86c;
     color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 header {
@@ -24,4 +31,35 @@ footer {
     color: #fff;
     text-align: center;
     padding: 10px 0;
+}
+
+h1 {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333; /* Dark gray color */
+    text-align: center;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    
+}
+
+.block {
+    box-sizing: border-box;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f0f0f0;
+    width: calc(100% - 40px); /* Subtracting padding */
+    margin: 20px auto; /* Centering the block */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Adding a subtle shadow */
+}
+
+.block h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.block p {
+    margin-bottom: 0;
+    color: #666;
 }

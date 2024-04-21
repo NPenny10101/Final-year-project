@@ -2,11 +2,6 @@
 
 session_start();
 
-echo "<pre>";
-print_r($_POST);
-print_r($_FILES);
-echo "</pre>";
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Check if CSV file is uploaded
   if (!isset($_FILES['csvFile']) || $_FILES['csvFile']['error'] == UPLOAD_ERR_NO_FILE) {
@@ -32,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
         $tempName = $_FILES["csvFile"]["tmp_name"];
         $fileName = $_FILES["csvFile"]["name"];
-        echo 'hiiiidfbid fid f';
         // Read the contents of the uploaded CSV file
         $csvData = file_get_contents($tempName);
 //        print_r($csvData);
@@ -40,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Example: Display CSV data
    //     echo "<pre>" . $csvData . "</pre>";
         
-        $file = $_SESSION["csvFile"];
+        //$file = $_SESSION["csvData"];
         $csvArray = array(); 
 
         // Example: Parse CSV data
@@ -83,6 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
        $bounces = [];
        $dates = [];
        $totalTime = 0;
+       $timeOSArray = [];
        $totalPageViews = 0;
     
        //for loops to go through each value in the csv array
@@ -97,6 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($row['bounces'] != 1 && $csvArray[$c - 1]['visitId'] != $csvArray[$c]['visitId']) {
                 $totalTime = $totalTime + intval($row['timeOnSite']);
+                $timeOSArray[] = intval($row['timeOnSite']);
                 $totalPageViews = $totalPageViews + intval($row['pageviews']);
                 $realVisits = $realVisits + 1;
                 
@@ -145,7 +141,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         print_r($averagePageViews);
         echo "\n";
         print_r($earliestDate);
+        echo "\n";
+        //print_r($timeOSArray);
+
+        // Function to calculate the standard deviation of an array
+        function standardDeviation($arr) {
+          $mean = array_sum($arr) / count($arr);
+          $squaredDeviations = array_map(function($x) use ($mean) {
+              return pow($x - $mean, 2);
+          }, $arr);
+          $variance = sqrt(array_sum($squaredDeviations) / count($arr));
+          $lowerBound = max(0, $mean - $variance);
+          $upperBound = $mean + $variance;
+          return array($lowerBound, $upperBound, $variance);
+        }
         
+        $timeSD = standardDeviation($timeOSArray);
+
+        // Calculate the upper and lower bounds
+
+      //  echo "Mean: $averageTimeOnSite\n";
+        print_r($timeSD);
+      // echo "Upper Bound: $timeUpperBound\n";
+       // echo "Lower Bound: $timeLowerBound\n";
+
+        // exterpolation for the unique visitiors for a monthly total
+        $averageVisitorsPerDay = $numVisits / ($daysDifference + 1);
+        $averageVisitorsPer30Days =  $averageVisitorsPerDay * 30;
+
+        // Given monthly views statistics
+        $monthlyViewsStats = array(
+          array(1001, 15000, 0.46),   // 1,001-15K monthly views (46%)
+          array(15001, 50000, 0.193), // 15,001-50K monthly views (19.3%)
+          array(50001, 250000, 0.232), // 50,001-250K monthly views (23.2%)
+          array(250001, 10000000, 0.11), // 250,001-10M monthly views (11%)
+          array(10000001, PHP_INT_MAX, 0.005) // 10M+ monthly views (0.5%)
+        );
+
+        // Given minimum standard deviation
+        $minStandardDeviation = 0.1; // 10%
+
+        // Calculate the lower bound of the acceptable range
+        $lowerBound = 0;
+        foreach ($monthlyViewsStats as $stat) {
+          if ($stat[2] < $minStandardDeviation) {
+              $lowerBound = $stat[0];
+              break;
+          }
+        }
+
+        echo "Minimum requirement for an acceptable number of views: " . $lowerBound . " monthly views";
+        
+        // bounce rate analysis
+
+
 
         // URL of the Performance API endpoint
 /*         $api_url = 'https://example.com/performance-api-endpoint';
@@ -177,6 +226,74 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "Error: Unable to fetch data from the Performance API.";
         }
  */
+
+
+        // LIGHTHOUSE REPORT
+        // Function to generate Lighthouse report for a given URL and extract the performance score
+        function getLighthousePerformanceScore($url) {
+          // Define the command to execute Lighthouse
+          $command = "lighthouse --output=json --output-path=report.json $url";
+
+          // Execute the command
+          exec($command, $output, $return);
+
+          // Check if Lighthouse command executed successfully
+          if ($return === 0) {
+              // Read the generated report
+              $report = file_get_contents('report.json');
+
+              // Decode the JSON report
+              $reportData = json_decode($report, true);
+
+              // Check if the report data is valid
+              if ($reportData !== null && isset($reportData['categories']['performance'])) {
+                  // Extract and return the performance score
+                  return $reportData['categories']['performance']['score'] * 100;
+              } else {
+                  // Invalid report data or missing performance score
+                  return false;
+              }
+          } else {
+              // Lighthouse command failed
+              return false;
+          }
+        }
+
+        // Function to extract accessibility information from a Lighthouse report
+        function extractAccessibilityInfo($report) {
+          // Decode the JSON report
+          $reportData = json_decode($report, true);
+
+          // Check if the report data is valid and contains accessibility information
+          if ($reportData !== null && isset($reportData['categories']['accessibility'])) {
+              // Extract accessibility information
+              $accessibilityInfo = $reportData['categories']['accessibility'];
+
+              // Return accessibility information
+              return $accessibilityInfo;
+          } else {
+              // Invalid report data or missing accessibility information
+              return false;
+          }
+        }
+
+        // Example URL provided by the user
+        $url = "https://google.com";
+
+        // Get the performance score for the provided URL
+        $performanceScore = getLighthousePerformanceScore($url);
+
+        // Check if the performance score was retrieved successfully
+        if ($performanceScore !== false) {
+          // Output the performance score
+          echo "Performance Score: " . $performanceScore . "/100";
+        } else {
+          // Report generation failed or performance score not found
+          echo "Failed to retrieve the performance score for the provided URL.";
+        }
+        
+        
+
 
 
         // Establish connection to MySQL database
@@ -304,22 +421,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </nav>
 
 
-<h1>Title</h1>
-<p>description of the tool</p>
+<h1>Key website analytic KPI's from your website</h1>
+<p>description of thdffdfddfdffde tool</p>
 
-<!-- <form class="row g-2" action="process_csv.php" method="POST" enctype="multipart/form-data">
-<div id="uploadForm" class="col-auto">
-    <label for="staticEmail2" class="visually-hidden">Email</label>
-    <input id="upload" type="file" name="csvFile" accept=".csv"> 
+<div class="container">
+        <div class="block">
+            <h2>Left Block</h2>
+            <p>This is some information about the left block. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis efficitur urna a augue hendrerit tincidunt. Vivamus at elit vel urna dignissim tincidunt non sed mi. Nulla ut massa ipsum.</p>
+        </div>
+        <div class="block">
+            <h2>Right Block</h2>
+            <p>This is some information about the right block. Phasellus pretium, lorem non ullamcorper fermentum, sapien nunc fermentum lacus, ut bibendum nunc velit nec libero. Fusce vel lorem eget nunc egestas interdum non in lorem.</p>
+        </div>
+        <div class="block">
+            <h2>Left Block</h2>
+            <p>This is some information about the left block. Curabitur nec ligula et urna tincidunt laoreet. Fusce nec arcu vel enim elementum sollicitudin ac non ipsum. Fusce non libero ut lorem rhoncus mattis.</p>
+        </div>
+        <div class="block">
+            <h2>Right Block</h2>
+            <p>This is some information about the right block. Proin tempor velit vel lorem laoreet, id mattis eros bibendum. Integer fermentum purus non orci venenatis ullamcorper. Phasellus eu purus vel metus bibendum vestibulum.</p>
+        </div>
   </div>
-  <div class="col-auto">
-    <button type="submit" class="btn btn-primary mb-3">Upload CSV</button>
-  </div>
-  <div class="row-auto">
-    <label>URL</label>
-    <input id="url" type="text" name="url"> 
-  </div>
-</form> -->
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
