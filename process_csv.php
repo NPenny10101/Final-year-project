@@ -114,54 +114,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $dates[] = $row['date'];
 
-            if ($row['bounces'] != 1 && $csvArray[$c - 1]['visitId'] != $csvArray[$c]['visitId']) {
-                $totalTime = $totalTime + intval($row['timeOnSite']);
-                $timeOSArray[] = intval($row['timeOnSite']);
-                $totalPageViews = $totalPageViews + intval($row['pageviews']);
-                $pageViewsArray[] = intval($row['pageviews']);
-                $realVisits = $realVisits + 1;
+            if (isset($csvArray[$c + 1])) {
+              if ($row['bounces'] != 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']) {
+                  $totalTime = $totalTime + intval($row['timeOnSite']);
+                  $timeOSArray[] = intval($row['timeOnSite']);
+                  $totalPageViews = $totalPageViews + intval($row['pageviews']);
+                  $pageViewsArray[] = intval($row['pageviews']);
+                  $realVisits = $realVisits + 1;
 
-                $deviceCatagory[] = $row['deviceCategory'];
-                if($row['browser'] == 'Chrome'){
-                  $chrome = $chrome + 1;
-                }elseif ($row['browser'] == 'Safari'){
-                  $safari = $safari + 1;
-                }elseif ($row['browser'] == 'Firefox'){
-                  $firefox = $firefox + 1;
-                }elseif ($row['browser'] == 'Internet Explorer'){
-                  $IE = $IE + 1;
-                }
+                  $deviceCatagory[] = $row['deviceCategory'];
+                  if($row['browser'] == 'Chrome'){
+                    $chrome = $chrome + 1;
+                  }elseif ($row['browser'] == 'Safari'){
+                    $safari = $safari + 1;
+                  }elseif ($row['browser'] == 'Firefox'){
+                    $firefox = $firefox + 1;
+                  }elseif ($row['browser'] == 'Internet Explorer'){
+                    $IE = $IE + 1;
+                  }
 
-                if($row['deviceCategory'] == 'desktop'){
-                  $desktop = $desktop + 1;
-                }elseif ($row['deviceCategory'] == 'mobile'){
-                  $mobile = $mobile + 1;
-                }elseif ($row['deviceCategory'] == 'tablet'){
-                  $tablet = $tablet + 1;
-                }
+                  if($row['deviceCategory'] == 'desktop'){
+                    $desktop = $desktop + 1;
+                  }elseif ($row['deviceCategory'] == 'mobile'){
+                    $mobile = $mobile + 1;
+                  }elseif ($row['deviceCategory'] == 'tablet'){
+                    $tablet = $tablet + 1;
+                  }
 
-                if($row['channelGrouping'] == 'Organic Search'){
-                  $organic = $organic + 1;
-                }elseif ($row['channelGrouping'] == 'Referral'){
-                  $referral = $referral + 1;
-                }elseif ($row['channelGrouping'] == 'Paid Search'){
-                  $paid = $paid + 1;
-                }elseif ($row['channelGrouping'] == 'Direct'){
-                  $direct = $direct + 1;
-                }
+                  if($row['channelGrouping'] == 'Organic Search'){
+                    $organic = $organic + 1;
+                  }elseif ($row['channelGrouping'] == 'Referral'){
+                    $referral = $referral + 1;
+                  }elseif ($row['channelGrouping'] == 'Paid Search'){
+                    $paid = $paid + 1;
+                  }elseif ($row['channelGrouping'] == 'Direct'){
+                    $direct = $direct + 1;
+                  }
 
-                $medium[] = $row['medium'];
-                $browser[] = $row['browser'];
-                $country[] = $row['country'];
-                
-                if (isset($csvArray[$c + 1])) {
+                  $medium[] = $row['medium'];
+                  $browser[] = $row['browser'];
+                  $country[] = $row['country'];
+
+                  
                   if($row['isExit'] == true){
                     $exitPage[] = $row['pageTitle'];
                   }
                   if($row['isEntrance'] == true){
                     $entryPage[] = $row['pageTitle'];
                   }
-                }
+                  
+              }
 
             }
 
@@ -484,6 +486,137 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }else{
+
+            // SQL to retrieve the informatioin            
+/*            $dataset = [
+               ['visitors' => 100, 'avg_time_spent' => 60, 'country' => 'US', 'bounce_rate' => 20, 'pageviews' => 200, 'browser' => 'Chrome'],
+              ['visitors' => 200, 'avg_time_spent' => 45, 'country' => 'UK', 'bounce_rate' => 25, 'pageviews' => 180, 'browser' => 'Firefox'],
+              // More data points...
+          ]; */
+          $sql = "SELECT w.*, r.*, s.*
+                  FROM website w
+                  JOIN reports r ON w.web_Id = r.web_Id
+                  JOIN source s ON r.report_Id = s.report_Id";
+  
+          $result = $conn->query($sql);
+          
+          if ($result->num_rows > 0) {
+              // Initialize an empty array to store the results
+              $dBDataset = [];
+          
+              // Fetch each row from the result set
+              while ($row = $result->fetch_assoc()) {
+                  // Append the row to the linked array
+                  $dBDataset[] = $row;
+              }
+          
+              // Output the linked array (you can process it further as needed)
+          } else {
+              echo "No results found";
+          }
+          
+          // Close connection
+          $result->close();
+
+
+            // machine learning algorithm
+
+            function dbscan($dataset, $epsilon, $minPts) {
+                $clusters = array();
+                $clusterId = 0;
+
+
+                foreach ($dataset as $pointKey => &$point) {
+                    if (!is_null($point['cluster'])) continue; // Already assigned to a cluster
+                    
+                    $neighbors = regionQuery($dataset, $point, $epsilon);
+                    
+                    if (count($neighbors) < $minPts) {
+                        $point['cluster'] = -1; // Noise
+                    } else {
+                        $clusterId++;
+                        expandCluster($dataset, $point, $neighbors, $clusterId, $epsilon, $minPts);
+                    }
+                }
+                
+                return $dataset;
+            }
+
+            function regionQuery($dataset, $point, $epsilon) {
+                $neighbors = array();
+                
+                foreach ($dataset as $neighborKey => $neighbor) {
+                    if (calculateDistance($point, $neighbor) <= $epsilon) {
+                        $neighbors[$neighborKey] = $neighbor;
+                    }
+                }
+                
+                return $neighbors;
+            }
+
+            function expandCluster(&$dataset, $point, $neighbors, $clusterId, $epsilon, $minPts) {
+                $point['cluster'] = $clusterId;
+                
+                foreach ($neighbors as $neighborKey => &$neighbor) {
+                    if (is_null($neighbor['cluster'])) { // Unassigned or marked as noise
+                        $neighbor['cluster'] = $clusterId;
+                        $newNeighbors = regionQuery($dataset, $neighbor, $epsilon);
+                        
+                        if (count($newNeighbors) >= $minPts) {
+                            $neighbors += $newNeighbors;
+                        }
+                    }
+                }
+            }
+
+            function calculateDistance($point1, $point2) {
+              // Ensure both points are arrays
+              if (!is_array($point1) || !is_array($point2)) {
+                  throw new InvalidArgumentException('Both inputs must be arrays');
+              }
+          
+              // Ensure both arrays have the same number of dimensions
+              if (count($point1) !== count($point2)) {
+                  throw new InvalidArgumentException('Both arrays must have the same number of dimensions');
+              }
+          
+              // Calculate Euclidean distance
+              $sum = 0;
+              foreach ($point1 as $key => $value) {
+                  $sum += pow((float)$value - (float)$point2[$key], 2); // Explicitly cast to float
+              }
+              return sqrt($sum);
+          }
+
+
+            foreach ($dBDataset as &$point) {
+              $point['cluster'] = null; // or any other default value you prefer
+            }
+
+            $epsilon = 1;
+            $minPts = 3;
+            $clusteredDataset = dbscan($dBDataset, $epsilon, $minPts);
+            //print_r($clusteredDataset);
+
+            // Prepare the data for the scatter plot
+            $dataPoints = [];
+            foreach ($clusteredDataset as $data) {
+                // Extract the relevant data points for the scatter plot
+                $x = $data['organic']; // Example: average time spent
+                $y = $data['paid']; // Example: bounce rate
+                $cluster = $data['cluster']; // Cluster ID
+
+                // Add the data point to the array
+                $dataPoints[] = ["x" => $x, "y" => $y, "cluster" => $cluster];
+            }
+            
+
+            $jsonData = json_encode($clusteredDataset);
+
+
+
+
+
       //      $sql1 = "INSERT INTO `website` ( `url`, `audience`, `type`, `site_location`) VALUES ('youtube.com', 'general public', 'e-commerce', 'USA')";
             $sql1 = "INSERT INTO `website` (`url`, `audience`, `type`, `site_location`) VALUES (?, ?, ?, ?)";
             $stmt1 = $conn->prepare($sql1);
@@ -496,7 +629,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $site_location = "USA";
 
             // Execute the statement
-            $stmt1->execute();
+            //$stmt1->execute();
 
             // Fetch the web_Id of the inserted row
             $web_Id = $conn->insert_id;
@@ -519,7 +652,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt2->bind_param("iisiiiiiiii", $web_Id, $daysDifference, $earliestDate, $numVisits, $numUniqueVisitorIds, $averageTimeOnSite, $averagePageViews, $bouncerate, $performance, $accessibility, $seo); // 
 
             // Execute the statement
-            $stmt2->execute();
+            //$stmt2->execute();
 
             $report_Id = $conn->insert_id;
             // Close the statement
@@ -535,7 +668,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt3->bind_param("iiiiiiiiiiiisss", $report_Id, $direct, $organic, $paid, $referral, $chrome, $firefox, $IE, $safari, $mobile, $tablet, $desktop, $topCountry, $topEntryPage, $topExitPage); // 
 
             // Execute the statement
-            $stmt3->execute();
+            //$stmt3->execute();
 
             // Close the statement
             $stmt3->close();
@@ -557,7 +690,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             echo "Error: " . mysqli_error($conn);
         }
- */
+ */     
         $conn->close();
 
 }
@@ -581,6 +714,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Bootstrap demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles/style.css">
+    <script src="https://cdn.canvasjs.com/ga/canvasjs.min.js"></script>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
@@ -622,7 +756,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="container">
         <div class="block">
             <h2>Views</h2>
-            <p>This is some information about the left block. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis efficitur urna a augue hendrerit tincidunt. Vivamus at elit vel urna dignissim tincidunt non sed mi. Nulla ut massa ipsum.</p>
+            <p>explain what their results are hten compare against industry standards</p>
             
           </div>
         <div class="block">
@@ -657,6 +791,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p>This is some information about the right block. Proin tempor velit vel lorem laoreet, id mattis eros bibendum. Integer fermentum purus non orci venenatis ullamcorper. Phasellus eu purus vel metus bibendum vestibulum.</p>
         </div>
   </div>
+  <div id="scatterChartContainer" style="height: 700px; width: 100%;"></div>
+
+    <script>
+        // Parse the JSON data passed from PHP
+        var data = <?php echo $jsonData; ?>;
+        console.log(data); // Log the received data to verify
+
+        // Prepare data for CanvasJS
+        var dataPoints = [];
+        for (var i = 0; i < data.length; i++) {
+            dataPoints.push({ x: data[i].organic, y: data[i].paid, color: data[i].cluster });
+        }
+
+        // Create scatter plot using CanvasJS
+        var chart = new CanvasJS.Chart("scatterChartContainer", {
+            title: {
+                text: "Clustered Dataset"
+            },
+            data: [{
+                type: "scatter",
+                markerSize: 5,
+                toolTipContent: "<b>{color}</b><br/>Average Time: {x}, Bounce Rate: {y}%",
+                dataPoints: dataPoints
+            }]
+        });
+
+        // Render the chart
+        chart.render();
+    </script>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
