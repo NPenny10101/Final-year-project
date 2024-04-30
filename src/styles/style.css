@@ -43,6 +43,17 @@ h1 {
     
 }
 
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333; /* Dark gray color */
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
 .block {
     box-sizing: border-box;
     padding: 20px;
@@ -62,4 +73,14 @@ h1 {
 .block p {
     margin-bottom: 0;
     color: #666;
+}
+
+.good {
+    border-color: green;
+}
+.average {
+    border-color: orange;
+}
+.poor {
+    border-color: red;
 }

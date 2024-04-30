@@ -72,9 +72,9 @@ if (isset($_SESSION['errors'])) {
         <label class="input-group-text" for="audience">Audience</label>
         <select class="form-select" id="audience" name="audience">
             <option selected>Choose...</option>
-            <option value="1">General Public</option>
-            <option value="2">Patients</option>
-            <option value="3">Healthcare Professionals</option>
+            <option value="General Public">General Public</option>
+            <option value="Patients">Patients</option>
+            <option value="Healthcare Professionals">Healthcare Professionals</option>
         </select>
     </div>
     <div class="col-md-auto">
