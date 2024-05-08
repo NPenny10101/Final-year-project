@@ -1,42 +1,30 @@
 <?php
-$hostname = "localhost"; // Change to your MySQL server hostname
-$username = "root"; // Change to your MySQL username
-$password = "88vdmC6yawFPHf1"; // Change to your MySQL password
-$database_name = "final_project"; // Change to your database name
-$conn = new mysqli($hostname, $username, $password, $database_name);
 
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}else{
+include 'header.php';
+include 'config.php';
 
-            // SQL to retrieve the informatioin            
 
-  $sql = "SELECT w.*, r.*, s.*
-  FROM website w
-  JOIN reports r ON w.web_Id = r.web_Id
-  JOIN source s ON r.report_Id = s.report_Id";
-  
-  $result = $conn->query($sql);
+
+$result = fetchAllData();
+        
+if ($result->num_rows > 0) {
+  // Initialize an empty array to store the results
+  $dBDataset = [];
           
-  if ($result->num_rows > 0) {
-    // Initialize an empty array to store the results
-    $dBDataset = [];
-            
-    // Fetch each row from the result set
-    while ($row = $result->fetch_assoc()) {
-      // Append the row to the linked array
-      $dBDataset[] = $row;
-    }
-            
-  // Output the linked array (you can process it further as needed)
-    } else {
-    echo "No results found";
-    }
+  // Fetch each row from the result set
+  while ($row = $result->fetch_assoc()) {
+    // Append the row to the linked array
+    $dBDataset[] = $row;
+  }
           
-  // Close connection
-  $result->close();
+// Output the linked array (you can process it further as needed)
+  } else {
+  echo "No results found";
+  }
+        
+// Close connection
+$result->close();
 
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -47,68 +35,6 @@ if ($conn->connect_error) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles/style.css">
     <script>
-/*         function sortTable(columnIndex, type) {
-            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            table = document.getElementById("myTable");
-            switching = true;
-            dir = "asc";  // Set the initial sorting direction to ascending
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[columnIndex];
-                    y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
-                    if (dir == "asc") {
-                        if ((type === 'num' ? parseFloat(x.innerHTML) : x.innerHTML.toLowerCase()) > 
-                            (type === 'num' ? parseFloat(y.innerHTML) : y.innerHTML.toLowerCase())) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else if (dir == "desc") {
-                        if ((type === 'num' ? parseFloat(x.innerHTML) : x.innerHTML.toLowerCase()) < 
-                            (type === 'num' ? parseFloat(y.innerHTML) : y.innerHTML.toLowerCase())) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    }
-                }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                } else {
-                    if (switchcount == 0 && dir == "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }
-            }
-        } */
-
-/*         function partition(rows, low, high, columnIndex, type) {
-            const pivot = rows[high].getElementsByTagName("TD")[columnIndex];
-            let i = low - 1;
-
-            for (let j = low; j <= high - 1; j++) {
-                let current = rows[j].getElementsByTagName("TD")[columnIndex];
-                if ((type === 'num' ? parseFloat(current.innerHTML) : current.innerHTML.toLowerCase()) <
-                    (type === 'num' ? parseFloat(pivot.innerHTML) : pivot.innerHTML.toLowerCase())) {
-                    i++;
-                    rows[i].parentNode.insertBefore(rows[j], rows[i]);
-                }
-            }
-            rows[i + 1].parentNode.insertBefore(rows[high], rows[i + 1]);
-            return i + 1;
-        }
-
-        function quickSort(rows, low, high, columnIndex, type) {
-            if (low < high) {
-                let pi = partition(rows, low, high, columnIndex, type);
-                quickSort(rows, low, pi - 1, columnIndex, type);
-                quickSort(rows, pi + 1, high, columnIndex, type);
-            }
-        } */
 
         function sortTable(columnIndex, type) {
             var table = document.getElementById("myTable");
@@ -145,9 +71,6 @@ if ($conn->connect_error) {
         }
 
 
-
-
-
         var currentPage = 1;
         var recordsPerPage = 10;
 
@@ -180,37 +103,6 @@ if ($conn->connect_error) {
     </script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>      
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="home.php">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="history.php">History</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown link
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
 
 
   <h1>Past Analytics Reports</h1>

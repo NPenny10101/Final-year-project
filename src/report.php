@@ -1,4 +1,10 @@
 <?php
+include "config.php";
+include "functions.php";
+include "clustering.php";
+include "lighthouse.php";
+include "database_functions.php";
+include 'header.php'; 
 
 session_start();
 
@@ -49,12 +55,6 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         $fileName = $_FILES["csvFile"]["name"];
         // Read the contents of the uploaded CSV file
         $csvData = file_get_contents($tempName);
-//        print_r($csvData);
-        // Process the CSV data (you can customize this part based on your requirements)
-        // Example: Display CSV data
-   //     echo "<pre>" . $csvData . "</pre>";
-        
-        //$file = $_SESSION["csvData"];
         $csvArray = array(); 
 
         // Example: Parse CSV data
@@ -118,465 +118,217 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
       $desktop = 0;
       // deviceCategory, source (direct,ask, partners or url), medium (refereal, organic, affiliate none), browser, subContinent, Country, cannelGrouping (organic refereal paid direct) ,entry page, exit page
 
-       //for loops to go through each value in the csv array
-        foreach ($csvArray as $row) {
-            $uniqueVisitorIds[] = $row['fullVisitorId'];
-            
-            $visitId[] = $row['visitId'];
-            
-            $bounces[] = $row['bounces'];
+      //for loops to go through each value in the csv array
+      foreach ($csvArray as $row) {
+          $uniqueVisitorIds[] = $row['fullVisitorId'];
+          
+          $visitId[] = $row['visitId'];
+          
+          $bounces[] = $row['bounces'];
 
-            $dates[] = $row['date'];
+          $dates[] = $row['date'];
 
-            if (isset($csvArray[$c + 1])) {
-              if ($row['bounces'] != 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']) {
-                  $totalTime = $totalTime + intval($row['timeOnSite']);
-                  $totalPageViews = $totalPageViews + intval($row['pageviews']);
-                  $pageViewsArray[] = intval($row['pageviews']);
-                  $realVisits = $realVisits + 1;
+          if (isset($csvArray[$c + 1])) {
+            if ($row['bounces'] != 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']) {
+                $totalTime = $totalTime + intval($row['timeOnSite']);
+                $totalPageViews = $totalPageViews + intval($row['pageviews']);
+                $pageViewsArray[] = intval($row['pageviews']);
+                $realVisits = $realVisits + 1;
 
 
-                  $deviceCatagory[] = $row['deviceCategory'];
-                  if($row['browser'] == 'Chrome'){
-                    $chrome = $chrome + 1;
-                  }elseif ($row['browser'] == 'Safari'){
-                    $safari = $safari + 1;
-                  }elseif ($row['browser'] == 'Firefox'){
-                    $firefox = $firefox + 1;
-                  }elseif ($row['browser'] == 'Internet Explorer'){
-                    $IE = $IE + 1;
-                  }elseif ($row['browser'] == 'Edge'){
-                    $edge = $edge + 1;
-                  }
-
-                  if($row['deviceCategory'] == 'desktop'){
-                    $desktop = $desktop + 1;
-                    $timeOSArrayDesktop[] = intval($row['timeOnSite']);
-                  }elseif ($row['deviceCategory'] == 'mobile'){
-                    $mobile = $mobile + 1;
-                    $timeOSArrayMobile[] = intval($row['timeOnSite']);
-                  }elseif ($row['deviceCategory'] == 'tablet'){
-                    $tablet = $tablet + 1;
-                    $timeOSArrayMobile[] = intval($row['timeOnSite']);
-                  }
-
-                  if($row['channelGrouping'] == 'Organic Search'){
-                    $organic = $organic + 1;
-                  }elseif ($row['channelGrouping'] == 'Referral'){
-                    $referral = $referral + 1;
-                  }elseif ($row['channelGrouping'] == 'Paid Search'){
-                    $paid = $paid + 1;
-                  }elseif ($row['channelGrouping'] == 'Direct'){
-                    $direct = $direct + 1;
-                  }
-
-                  $medium[] = $row['medium'];
-                  $browser[] = $row['browser'];
-                  $country[] = $row['country'];
-
-                  
-                  if($row['isExit'] == true){
-                    $exitPage[] = $row['pageTitle'];
-                  }
-                  if($row['isEntrance'] == true){
-                    $entryPage[] = $row['pageTitle'];
-                  }
-                  
-              }
-
-            }
-            if (isset($csvArray[$c + 1])) {
-              // if statement to collate all the pages that contribute to the bouncerate and entry and exit pages
-              if($row['isEntrance'] == true && $row['isExit'] == true && $row['bounces'] == 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
-                $bounceratePages[] = $row['pageTitle'];
-              }
-              if($row['isExit'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
-                $exitPage[] = $row['pageTitle'];
-              }
-              if($row['isEntrance'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
-                $entryPage[] = $row['pageTitle'];
-              }
-            }
-
-            foreach ($row as $data){
-                //identifying all unique visitor ids and adding them to the array
-                if (isset($data['fullVisitorId'])) {
-                    $uniqueVisitorIds[] = $data['fullVisitorId'];
+                $deviceCatagory[] = $row['deviceCategory'];
+                if($row['browser'] == 'Chrome'){
+                  $chrome = $chrome + 1;
+                }elseif ($row['browser'] == 'Safari'){
+                  $safari = $safari + 1;
+                }elseif ($row['browser'] == 'Firefox'){
+                  $firefox = $firefox + 1;
+                }elseif ($row['browser'] == 'Internet Explorer'){
+                  $IE = $IE + 1;
+                }elseif ($row['browser'] == 'Edge'){
+                  $edge = $edge + 1;
                 }
-                // identifying the date range
+
+                if($row['deviceCategory'] == 'desktop'){
+                  $desktop = $desktop + 1;
+                  $timeOSArrayDesktop[] = intval($row['timeOnSite']);
+                }elseif ($row['deviceCategory'] == 'mobile'){
+                  $mobile = $mobile + 1;
+                  $timeOSArrayMobile[] = intval($row['timeOnSite']);
+                }elseif ($row['deviceCategory'] == 'tablet'){
+                  $tablet = $tablet + 1;
+                  $timeOSArrayMobile[] = intval($row['timeOnSite']);
+                }
+
+                if($row['channelGrouping'] == 'Organic Search'){
+                  $organic = $organic + 1;
+                }elseif ($row['channelGrouping'] == 'Referral'){
+                  $referral = $referral + 1;
+                }elseif ($row['channelGrouping'] == 'Paid Search'){
+                  $paid = $paid + 1;
+                }elseif ($row['channelGrouping'] == 'Direct'){
+                  $direct = $direct + 1;
+                }
+
+                $medium[] = $row['medium'];
+                $browser[] = $row['browser'];
+                $country[] = $row['country'];
+
                 
-                // total visits
-                if (isset($data['visitId'])) {
-                    $visitId[] = $data['visitId'];
+                if($row['isExit'] == true){
+                  $exitPage[] = $row['pageTitle'];
                 }
+                if($row['isEntrance'] == true){
+                  $entryPage[] = $row['pageTitle'];
+                }
+                
             }
-            $c = $c + 1;
-        }
 
-        $numUniqueVisitorIds = count(array_unique($uniqueVisitorIds));
-        $numVisits = count(array_unique($visitId));
-        $bouncerate = round(array_sum($bounces) / $numVisits * 100);
-        $averageTimeOnSite = round($totalTime / $realVisits);
-        $averagePageViews = round($totalPageViews / $realVisits);
-
-        // Convert string dates to Unix timestamps
-        $timestamps = array_map(function($dates) {
-            return strtotime($dates);
-        }, $dates);
-        // Find the minimum and maximum timestamps
-        $earliestTimestamp = min($timestamps);
-        $latestTimestamp = max($timestamps);
-        // Calculate the difference in days
-        $daysDifference = ceil(($latestTimestamp - $earliestTimestamp) / (60 * 60 * 24));
-        $earliestDate = date('Y-m-d', $earliestTimestamp);
-
-
-
-
-        //function to count the number of occurances in an array of strings
-        function arrayConverter($arr) {
-          $occurrences = array_count_values($arr);
-          $linkedArray = [];
-          foreach ($occurrences as $item => $count) {
-              $linkedArray[] = ['name' => $item, 'count' => $count];
           }
-          // Sort the linked array by count in descending order
-          usort($linkedArray, function($a, $b) {
-            return $b['count'] - $a['count'];
-          });
-           // Extract the first name from the linked array and ensuring it is a string
-
-          $firstName = !empty($linkedArray) ? $linkedArray[0]['name'] : '';
-
-          return ['linkedArray' => $linkedArray, 'firstName' => $firstName];
-        }
-
-        $result = arrayConverter($country);
-        $topCountry = $result['firstName'];
-
-        $result = arrayConverter($entryPage);
-        $topEntryPage = $result['firstName'];
-
-        $result = arrayConverter($exitPage);
-        $topExitPage = $result['firstName'];
-
-        $result = arrayConverter($bounceratePages);
-        $topBounceratedPage = $result['firstName'];
-
-
-
-
-        // Function to calculate mean
-        function mean($data) {
-          // Filter out non-integer values
-          $filteredData = array_filter($data, 'is_int');
-          return array_sum($filteredData) / count($filteredData);
-        }
-
-
-        // Function to calculate the standard deviation of an array along with the upper and lower bound
-        function standardDeviation($arr) {
-            // Filter out non-integer values
-            $filteredArr = array_filter($arr, 'is_int');
-            
-            // Calculate the mean
-            $mean = mean($filteredArr);
-            
-            // Calculate the squared deviations
-            $squaredDeviations = array_map(function($x) use ($mean) {
-                return pow($x - $mean, 2);
-            }, $filteredArr);
-            
-            // Calculate the variance
-            $variance = sqrt(array_sum($squaredDeviations) / count($filteredArr));
-            
-            return $variance;
-        }
-        
-
-        // Function to calculate confidence interval
-        function confidenceInterval($data) {
-            $confidenceLevel = 0.95;
-            $mean = mean($data);
-            $stdDev = standardDeviation($data);
-            $n = count($data);
-            $z = 0; // z-score for 95% confidence level
-            if ($confidenceLevel == 0.95) {
-                $z = 1.96; // For 95% confidence level
-            } else {
-                // You can define z-scores for other confidence levels here
+          if (isset($csvArray[$c + 1])) {
+            // if statement to collate all the pages that contribute to the bouncerate and entry and exit pages
+            if($row['isEntrance'] == true && $row['isExit'] == true && $row['bounces'] == 1 && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+              $bounceratePages[] = $row['pageTitle'];
             }
-            $marginError = $z * ($stdDev / sqrt($n));
-            $lowerBound = $mean - $marginError;
-            $upperBound = $mean + $marginError;
-            return [$lowerBound, $mean, $upperBound];
-        }        
-
-        function calculatePercentageAboveThreshold($numbers, $deviceType) {
-          // Define the threshold based on the device type
-          if ($deviceType == 'Desktop'){
-            $threshold = 360;
-          }elseif($deviceType == 'Mobile'){
-            $threshold = 150;
+            if($row['isExit'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+              $exitPage[] = $row['pageTitle'];
+            }
+            if($row['isEntrance'] == true && $csvArray[$c + 1]['visitId'] != $csvArray[$c]['visitId']){
+              $entryPage[] = $row['pageTitle'];
+            }
           }
-      
-          // Initialize counter for numbers above or equal to the threshold
-          $countAboveThreshold = 0;
-      
-          // Iterate through the numbers array
-          foreach ($numbers as $number) {
-              // Check if the number is above or equal to the threshold
-              if ($number >= $threshold) {
-                  $countAboveThreshold++;
+
+          foreach ($row as $data){
+              //identifying all unique visitor ids and adding them to the array
+              if (isset($data['fullVisitorId'])) {
+                  $uniqueVisitorIds[] = $data['fullVisitorId'];
+              }
+              // identifying the date range
+              
+              // total visits
+              if (isset($data['visitId'])) {
+                  $visitId[] = $data['visitId'];
               }
           }
-          // Calculate the percentage
-          $percentage = ($countAboveThreshold / count($numbers)) * 100;
-          return $percentage;
+          $c = $c + 1;
       }
 
-   
-        $keyMobileTimes = confidenceInterval($timeOSArrayMobile);
-        $keyDesktopTimes = confidenceInterval($timeOSArrayDesktop);
-        $mobileOverThreshold = calculatePercentageAboveThreshold($timeOSArrayMobile, 'Mobile');
-        $desktopOverThreshold = calculatePercentageAboveThreshold($timeOSArrayMobile, 'Desktop');
+      $numUniqueVisitorIds = count(array_unique($uniqueVisitorIds));
+      $numVisits = count(array_unique($visitId));
+      $bouncerate = round(array_sum($bounces) / $numVisits * 100);
+      $averageTimeOnSite = round($totalTime / $realVisits);
+      $averagePageViews = round($totalPageViews / $realVisits);
+
+      // Convert string dates to Unix timestamps
+      $timestamps = array_map(function($dates) {
+          return strtotime($dates);
+      }, $dates);
+      // Find the minimum and maximum timestamps
+      $earliestTimestamp = min($timestamps);
+      $latestTimestamp = max($timestamps);
+      // Calculate the difference in days
+      $daysDifference = ceil(($latestTimestamp - $earliestTimestamp) / (60 * 60 * 24));
+      $earliestDate = date('Y-m-d', $earliestTimestamp);
 
 
-        // Calculate the upper and lower bounds
+      $result = arrayConverter($country);
+      $topCountry = $result['firstName'];
 
-        //  echo "Mean: $averageTimeOnSite\n";
-        // Display confidence interval
-        //echo "Confidence Interval: [" . $confidenceInterval[0] . ", " . $confidenceInterval[1] . ", " . $confidenceInterval[2] ."]";
+      $result = arrayConverter($entryPage);
+      $topEntryPage = $result['firstName'];
 
+      $result = arrayConverter($exitPage);
+      $topExitPage = $result['firstName'];
 
-        //page views standard deviation  
-        //$pageViewsSD = standardDeviation($pageViewsArray);
+      $result = arrayConverter($bounceratePages);
+      $topBounceratedPage = $result['firstName'];
 
-
-
-        // extrapolation for the unique visitiors for a monthly total
-        $averageVisitorsPerDay = $numVisits / ($daysDifference + 1);
-        $averageVisitorsPer30Days =  $averageVisitorsPerDay * 30;
-
-        // Given minimum standard deviation
-        $minStandardDeviation = 0.1; // 10%
-
-        // Calculate the lower bound of the acceptable range
-
-        
-        // bounce rate analysis
+  
+      $keyMobileTimes = confidenceInterval($timeOSArrayMobile);
+      $keyDesktopTimes = confidenceInterval($timeOSArrayDesktop);
+      $mobileOverThreshold = calculatePercentageAboveThreshold($timeOSArrayMobile, 'Mobile');
+      $desktopOverThreshold = calculatePercentageAboveThreshold($timeOSArrayMobile, 'Desktop');
 
 
-        // analysing hte url that is passed in to determine the market for the website
-        function getCountryFromDomain($url) {
-          // Extract the domain from the URL
-          $parsedUrl = parse_url($url);
-          if (empty($parsedUrl['host'])) {
-            echo "<script>alert('Invalid URL. Please contact the development team.'); window.location.href='home.php';</script>";
-            exit;
-          }
-          $host = $parsedUrl['host'];
-      
-          // Find the last two segments of the domain name
-          $domainParts = explode('.', $host);
-          // Initialize TLD variables
-          $tld = end($domainParts); // Get the last part as the basic TLD
-          $combinedTld = $tld; // Default to the simplest TLD
+      // Calculate the upper and lower bounds
 
-          // Check if there are enough parts to form a combined TLD
-          if (count($domainParts) > 1) {
-              $secondLast = prev($domainParts); // Get the second last part
-              $combinedTld = $secondLast . '.' . $tld; // Combine the last two parts
-          }
+      //  echo "Mean: $averageTimeOnSite\n";
+      // Display confidence interval
+      //echo "Confidence Interval: [" . $confidenceInterval[0] . ", " . $confidenceInterval[1] . ", " . $confidenceInterval[2] ."]";
 
-          // Define a list of known country TLDs
-          $countryTLDs = [
-              'co.uk' => 'United Kingdom',
-              'com.au' => 'Australia',
-              'de' => 'Germany',
-              'fr' => 'France',
-              'nl' => 'Netherlands',
-              'ca' => 'Canada',
-              'co.jp' => 'Japan',
-              'co.in' => 'India',
-              'us' => 'United States',
-              'ru' => 'Russia',
-              'com' => 'Global', // Consider remov  ing if you do not want to default to 'Global'
-          ];
 
-          // Check the combined and then the simple TLD against known country TLDs
-          if (isset($countryTLDs[$combinedTld])) {
-              return $countryTLDs[$combinedTld];
-          } elseif (isset($countryTLDs[$tld])) {
-              return $countryTLDs[$tld];
-          } else {
-              echo "<script>alert('The URL submitted is not accepted. Please contact the development team to add a new domain ending to our preset list.'); window.location.href='home.php';</script>";
-              exit;
-          }
+      //page views standard deviation  
+      //$pageViewsSD = standardDeviation($pageViewsArray);
+
+
+
+      // extrapolation for the unique visitiors for a monthly total
+      $averageVisitorsPerDay = $numVisits / ($daysDifference + 1);
+      $averageVisitorsPer30Days =  $averageVisitorsPerDay * 30;
+
+      // Given minimum standard deviation
+      $minStandardDeviation = 0.1; // 10%
+
+      // analysing the url that is passed in to determine the market for the website
+      function getCountryFromDomain($url) {
+        // Extract the domain from the URL
+        $parsedUrl = parse_url($url);
+        if (empty($parsedUrl['host'])) {
+          echo "<script>alert('Invalid URL. Please contact the development team.'); window.location.href='home.php';</script>";
+          exit;
+        }
+        $host = $parsedUrl['host'];
+    
+        // Find the last two segments of the domain name
+        $domainParts = explode('.', $host);
+        // Initialize TLD variables
+        $tld = end($domainParts); // Get the last part as the basic TLD
+        $combinedTld = $tld; // Default to the simplest TLD
+
+        // Check if there are enough parts to form a combined TLD
+        if (count($domainParts) > 1) {
+            $secondLast = prev($domainParts); // Get the second last part
+            $combinedTld = $secondLast . '.' . $tld; // Combine the last two parts
         }
 
-        $site_location = getCountryFromDomain($url);
+        // Define a list of known country TLDs
+        $countryTLDs = [
+            'co.uk' => 'United Kingdom',
+            'com.au' => 'Australia',
+            'de' => 'Germany',
+            'fr' => 'France',
+            'nl' => 'Netherlands',
+            'ca' => 'Canada',
+            'co.jp' => 'Japan',
+            'co.in' => 'India',
+            'us' => 'United States',
+            'ru' => 'Russia',
+            'com' => 'Global', // Consider remov  ing if you do not want to default to 'Global'
+        ];
 
+        // Check the combined and then the simple TLD against known country TLDs
+        if (isset($countryTLDs[$combinedTld])) {
+            return $countryTLDs[$combinedTld];
+        } elseif (isset($countryTLDs[$tld])) {
+            return $countryTLDs[$tld];
+        } else {
+            echo "<script>alert('The URL submitted is not accepted. Please contact the development team to add a new domain ending to our preset list.'); window.location.href='home.php';</script>";
+            exit;
+        }
+      }
 
+      $site_location = getCountryFromDomain($url);
 
-        //Lighthouse report to gather key metrics regarding the url submitted
-        
-        function getLighthouseScores($url) {
-          // Define the command to execute Lighthouse for specific categories
-          $command = "lighthouse --output=json --output-path=report.json \"$url\"";
-      
-          exec($command . ' 2>&1', $output, $return);  
-          if ($return === 0) {
-              // Check if the report file was generated
-              if (!file_exists('report.json')) {
-                  echo "Report file not found.";
-                  return false;
-              }
-      
-              // Read the generated report
-              $report = file_get_contents('report.json');
-      
-              // Decode the JSON report
-              $reportData = json_decode($report, true);
-      
-              // Initialize scores array
-              $scores = [
-                  'performance_score' => null,
-                  'accessibility_score' => null,
-                  'seo_score' => null,
-                  'FCP_score' => null, //first content paint
-                  'FCP_value' => null,
-                  'SI_score' => null, // speed-index
-                  'SI_value' => null,
-                  'LCP_score' => null, //largest content paint
-                  'LCP_value' => null, 
-                  'TBT_score' => null, //total blocking time
-                  'TBT_value' => null,
-              ];
-      
-              // Check if the report data is valid and contains necessary categories
-              if ($reportData !== null) {
-                  if (isset($reportData['categories']['performance'])) {
-                      $scores['performance_score'] = $reportData['categories']['performance']['score'] * 100;
-                  }
-                  if (isset($reportData['categories']['accessibility'])) {
-                      $scores['accessibility_score'] = $reportData['categories']['accessibility']['score'] * 100;
-                  }
-                  if (isset($reportData['categories']['seo'])) {
-                      $scores['seo_score'] = $reportData['categories']['seo']['score'] * 100;
-                  }
-                  if (isset($reportData['audits']['first-contentful-paint'])) {
-                      $scores['FCP_score'] = $reportData['audits']['first-contentful-paint']['score'] * 100;
-                      $scores['FCP_value'] = $reportData['audits']['first-contentful-paint']['displayValue'];
-                  }
-                  if (isset($reportData['audits']['speed-index'])) {
-                    $scores['SI_score'] = $reportData['audits']['speed-index']['score'] * 100;
-                    $scores['SI_value'] = $reportData['audits']['speed-index']['displayValue'];
-                  }
-                  if (isset($reportData['audits']['largest-contentful-paint'])) {
-                    $scores['LCP_score'] = $reportData['audits']['largest-contentful-paint']['score'] * 100;
-                    $scores['LCP_value'] = $reportData['audits']['largest-contentful-paint']['displayValue'];
-                  }
-                  if (isset($reportData['audits']['total-blocking-time'])) {
-                    $scores['TBT_score'] = $reportData['audits']['total-blocking-time']['score'] * 100;
-                    $scores['TBT_value'] = $reportData['audits']['total-blocking-time']['displayValue'];
-                  }
-              }
-      
-              // Optionally, delete the report file to clean up
-              //unlink('report.json');
-      
-              //print_r($scores);
-              return $scores;
-          } else {
-              // Lighthouse command failed or did not generate a report
-              return false;
-          }
-      }      
       $lighthouse = getLighthouseScores($url);
       //print_r($lighthouse);
 
+      $exists = checkUrlExists($url);
 
-
-        // Establish connection to MySQL database
-        $hostname = "localhost"; // Change to your MySQL server hostname
-        $username = "root"; // Change to your MySQL username
-        $password = "88vdmC6yawFPHf1"; // Change to your MySQL password
-        $database_name = "final_project"; // Change to your database name
-
-        $conn = new mysqli($hostname, $username, $password, $database_name);
-
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
-        }else{
-
-            // SQL to retrieve the informatioin            
-/*            $dataset = [
-               ['visitors' => 100, 'avg_time_spent' => 60, 'country' => 'US', 'bounce_rate' => 20, 'pageviews' => 200, 'browser' => 'Chrome'],
-              ['visitors' => 200, 'avg_time_spent' => 45, 'country' => 'UK', 'bounce_rate' => 25, 'pageviews' => 180, 'browser' => 'Firefox'],
-              // More data points...
-          ]; */
-            // Check if the URL is already in the database
-            $sqlCheck = "SELECT web_Id FROM website WHERE url = ?";
-            $stmtCheck = $conn->prepare($sqlCheck);
-            $stmtCheck->bind_param("s", $url);
-            $stmtCheck->execute();
-            $result = $stmtCheck->get_result();
-            $exists = $result->fetch_assoc();
-            $stmtCheck->close();
-
-            if ($exists) {
-                $web_Id = $exists['web_Id'];
-            } else {
-                $sql1 = "INSERT INTO `website` (`url`, `audience`, `site_location`) VALUES (?, ?, ?)";
-                $stmt1 = $conn->prepare($sql1);
-                $stmt1->bind_param("sss", $url, $audience, $site_location);
-                // Execute the statement
-                //$stmt1->execute();
-                // Fetch the web_Id of the inserted row
-                $web_Id = $conn->insert_id;
-                // Close the statement
-                $stmt1->close();
-            }
-
-
-
-            $sql2 = "INSERT INTO `reports` (`web_Id`, `dateRange`, `date`, `report_date`, `visits`, `uniqueVisitors`, `averageTime`, `pageViews`, `bounceRate`, `performance`, `accessibility`, `SEO`) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
-            //Bind parameters to placeholders
-            $stmt2 = $conn->prepare($sql2);
-          //  $stmt->bindParam(1, 1);
-            $seo = $lighthouse['seo_score'];
-            $accessibility = $lighthouse['accessibility_score'];
-            $performance = $lighthouse['performance_score'];
-            $currentDateTime = date("Y-m-d H:i:s");
-
-            $stmt2->bind_param("iissiiiiiiii", $web_Id, $daysDifference, $earliestDate, $currentDateTime, $numVisits, $numUniqueVisitorIds, $averageTimeOnSite, $averagePageViews, $bouncerate, $performance, $accessibility, $seo);  
-
-            // Execute the statement
-            //$stmt2->execute();
-
-            $report_Id = $conn->insert_id;
-            // Close the statement
-            $stmt2->close();
-
-
-
-            $sql3 = "INSERT INTO `source` (`report_Id`, `direct`, `organic`, `paid`, `referral`, `chrome`, `firefox`, `internetExplorer`, `safari`, `mobile`, `tablet`, `desktop`, `topCountry`, `entry_page`, `exit_page`) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)";
-    
-            //Bind parameters to placeholders
-            $stmt3 = $conn->prepare($sql3);
-            $stmt3->bind_param("iiiiiiiiiiiisss", $report_Id, $direct, $organic, $paid, $referral, $chrome, $firefox, $IE, $safari, $mobile, $tablet, $desktop, $topCountry, $topEntryPage, $topExitPage); // 
-
-            // Execute the statement
-            //$stmt3->execute();
-
-            // Close the statement
-            $stmt3->close();
-
-        }
+      if ($exists) {
+          $web_Id = $exists['web_Id'];
+      } else {
+          $web_Id = insertWebsite($url, $audience, $site_location);
+      }
 
 /*         $result = mysqli_query($conn, $sql2);
 
@@ -593,228 +345,94 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         } else {
             echo "Error: " . mysqli_error($conn);
         }
- */
-                 $sql = "SELECT w.*, r.*, s.*
-                  FROM website w
-                  JOIN reports r ON w.web_Id = r.web_Id
-                  JOIN source s ON r.report_Id = s.report_Id";
-  
-          $result = $conn->query($sql);
-          
-          if ($result->num_rows > 0) {
-              // Initialize an empty array to store the results
-              $dBDataset = [];
-          
-              // Fetch each row from the result set
-              while ($row = $result->fetch_assoc()) {
-                  // Append the row to the linked array
-                  $dBDataset[] = $row;
-              }
-          
-              // Output the linked array (you can process it further as needed)
-          } else {
-              echo "No results found";
+*/
+
+      //$web_Id = insertWebsite($url, $audience, $site_location);
+
+      $reportDetails =[
+        'daysDifference' => $daysDifference,
+        'earliestDate' => $earliestDate,
+        'currentDateTime' => date("Y-m-d H:i:s"),
+        'numVisits' => $numVisits,
+        'numUniqueVisitorIds' => $numUniqueVisitorIds,
+        'averageTimeOnSite' => $averageTimeOnSite,
+        'averagePageViews' => $averagePageViews,
+        'bouncerate' => $bouncerate,
+        'performance' => $lighthouse['performance_score'],
+        'accessibility' => $lighthouse['accessibility_score'],
+        'seo'=> $lighthouse['seo_score']
+        ];
+
+      //$report_Id = insertReport($web_Id, $reportDetails);
+
+      $sourceDetails = [
+        'direct' => $direct,
+        'organic' => $organic,
+        'paid' => $paid,
+        'referral' => $referral,
+        'chrome' => $chrome,
+        'firefox' => $firefox,
+        'IE' => $IE,
+        'safari' => $safari,
+        'mobile' => $mobile,
+        'tablet' => $tablet,
+        'desktop' => $desktop,
+        'topCountry' => $topCountry,
+        'topEntryPage' => $topEntryPage,
+        'topExitPage' => $topExitPage
+      ];
+
+      //insertSource($report_Id, $sourceDetails);
+
+      $result = fetchAllData();
+      
+      if ($result->num_rows > 0) {
+          // Initialize an empty array to store the results
+          $dBDataset = [];
+          // Fetch each row from the result set
+          while ($row = $result->fetch_assoc()) {
+              // Append the row to the linked array
+              $dBDataset[] = $row;
           }
-          
-          // Close connection
-          $result->close();
-          //print_r($dBDataset);
+          // Output the linked array (you can process it further as needed)
+      } else {
+          echo "No results found";
+      }
+      
+      // Close connection
+      $result->close();
+
+      //performing the clustering algorithm in clustering.php
+      $k = 3;  // Example: Number of clusters
+      $clusters = kMeans($dBDataset, $k);
+      $jsonData = json_encode($clusters);
 
 
-          // k-means plus algorithm for clustering
-          function initializeCentroids(array $dataset, $k) {
-            $centroids = array();
-            $firstKey = array_rand($dataset);
-            $centroids[] = $dataset[$firstKey];
-        
-            for ($i = 1; $i < $k; $i++) {
-                $distances = array();
-                foreach ($dataset as $dataPoint) {
-                    $minDist = INF;
-                    foreach ($centroids as $centroid) {
-                        $dist = calculateDistance($dataPoint, $centroid);
-                        $minDist = min($minDist, $dist);
-                    }
-                    $distances[] = $minDist;
-                }
-                $total = array_sum($distances);
-                $probabilities = array_map(function($dist) use ($total) { return $dist / $total; }, $distances);
-                $cumulativeProbabilities = array();
-                $cumSum = 0;
-                foreach ($probabilities as $p) {
-                    $cumSum += $p;
-                    $cumulativeProbabilities[] = $cumSum;
-                }
-                $random = mt_rand() / mt_getrandmax();
-                foreach ($cumulativeProbabilities as $index => $cumProb) {
-                    if ($random <= $cumProb) {
-                        $centroids[] = $dataset[$index];
-                        break;
-                    }
-                }
-            }
-            return $centroids;
-        }
-        
-          function assignPointsToCentroids(array $dataset, array $centroids) {
-            $clusters = array();
-            foreach ($dataset as $point) {
-                $minDist = INF;
-                $cluster = 0;
-                foreach ($centroids as $key => $centroid) {
-                    $dist = calculateDistance($point, $centroid);
-                    if ($dist < $minDist) {
-                        $minDist = $dist;
-                        $cluster = $key;
-                    }
-                }
-                $clusters[$cluster][] = $point; 
-            }
-            return $clusters;
-          }
-        
-          function updateCentroids(array $clusters) {
-            $newCentroids = array();
-            foreach ($clusters as $cluster) {
-                $newCentroids[] = array_map(function($dim) {
-                    return array_sum($dim) / count($dim);
-                }, arrayTranspose($cluster));
-            }
-            return $newCentroids;
-          }
+      $webId = 112; // this will be removed when the database excecutions are removed as well - for testing purposes
 
-          function arrayTranspose(array $array) {
-            $result = array();
-            foreach ($array as $sub) {
-                foreach ($sub as $k => $v) {
-                    $result[$k][] = $v;
-                }
-            }
-            return $result;
-          }
-        
-          function calculateDistance(array $point1, array $point2) {
-            $metrics = ['visits', 'uniqueVisitors'];  // Only use these metrics for clustering
-            $sum = 0;
-            foreach ($metrics as $metric) {
-                $sum += pow(($point1[$metric] - $point2[$metric]), 2);
-            }
-            return sqrt($sum);
-          }
-        
-          function kMeans(array $dataset, $k, $maxIterations = 100) {
-            $centroids = initializeCentroids($dataset, $k);
-            $iterations = 0;
-            $clusters = array();
-        
-            while ($iterations++ < $maxIterations) {
-                $clusters = assignPointsToCentroids($dataset, $centroids);
-                $newCentroids = updateCentroids($clusters);
-                if ($newCentroids === $centroids) {
-                    break; // Centroids didn't change
-                }
-                $centroids = $newCentroids;
-            }
-        
-            return $clusters;
-          }
-          $k = 3;  // Example: Number of clusters
-          $clusters = kMeans($dBDataset, $k);
-          $jsonData = json_encode($clusters);
+      $dataPointInfo = findDataPointAndCluster($clusters, $webId);
+      $targetWebsite = $dataPointInfo['dataPoint'];
+      $clusterId = $dataPointInfo['clusterId'];
+
+    
+      // get the monthly number of visitors
+      $dailyVisitors = $numUniqueVisitorIds / ($daysDifference+1);
+      $numUniqueVisitorIds = $dailyVisitors * 30;
+    
+    $conn->close();
 
 
-          // Find the cluster for the known web_Id
-          function findDataPointAndCluster(array $clusters, $knownWebId) {
-            $result = array();
-            foreach ($clusters as $clusterId => $cluster) {
-                foreach ($cluster as $dataPoint) {
-                    if ($dataPoint['web_Id'] == $knownWebId) {
-                        $result['dataPoint'] = $dataPoint;
-                        $result['clusterId'] = $clusterId;
-                        return $result; // Return as soon as the desired data point is found
-                    }
-                }
-            }
-            return $result; // Return an empty array if no matching web_Id is found
-          }
 
-          $webId = 112; // this will be removed when the database excecutions are removed as well - for testing purposes
-
-          $dataPointInfo = findDataPointAndCluster($clusters, $webId);
-          $targetWebsite = $dataPointInfo['dataPoint'];
-          $clusterId = $dataPointInfo['clusterId'];
-
-          if (!empty($dataPointInfo)) {
-            echo "Found web_Id $webId in cluster " . $dataPointInfo['clusterId'] . ".\n";
-            print_r($dataPointInfo['dataPoint']); // This prints all the data for the web_Id within the cluster
-          } else {
-            echo "No data found for web_Id $webId.";
-          }
-        
-          // get the monthly number of visitors
-          $dailyVisitors = $numUniqueVisitorIds / ($daysDifference+1);
-          $numUniqueVisitorIds = $dailyVisitors * 30;
-        
-        $conn->close();
-
-}
-   else {
-  // Redirect back to home.php if accessed directly without a valid POST request
-  $_SESSION['errors'][] = "Invalid POST request please contact a developer.";
-  header("Location: home.php");
-  exit();
-}  
-        
+    }
 
 //print_r($csvArray);
+
+
 
 ?>
 
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="styles/style.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="https://cdn.canvasjs.com/ga/canvasjs.min.js"></script>
-</head>
-<body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>      
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="home.php">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="history.php">History</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown link
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><a class="dropdown-item" href="#">this needs to be changed</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
-
 <h1>Key website analytic KPI's from your website</h1>
 <h3>Below you will find the report for <?php echo"$url" ?>.
 </h3>
@@ -863,7 +481,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             ?>
         </div>
 
-        <div class="block" title = "Hello world">
+        <div class="block" >
             <h2>Bounce Rate: <?php echo"$bouncerate"; ?>%</h2>
             <p><b>Description: </b>The bounce rate is a metric used to measure the percentage of visitors who land on a single page of a website and then leave without interacting further with the site, 
               a higher percentage means that more people are leaving without any interaction with the website. There are many factors that can affect the bounce rate of a website like its purpose, 
@@ -1189,6 +807,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
     });
 
     // Create a scatter plot using CanvasJS
+    windows.onload = function() {
     var chart = new CanvasJS.Chart("scatterChartContainer", {
         animationEnabled: true,
         theme: "light2",
@@ -1211,6 +830,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
     // Render the chart
     chart.render();
+  }
 </script>
 
 
