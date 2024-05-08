@@ -35,20 +35,7 @@ if (isset($_SESSION['errors'])) {
           <a class="nav-link active" aria-current="page" href="#">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown link
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-          </ul>
+          <a class="nav-link" href="history.php">History</a>
         </li>
       </ul>
     </div>
@@ -57,7 +44,10 @@ if (isset($_SESSION['errors'])) {
 
 
 <header>Title</header>
-<p>description of the tool</p>
+<p>This report should enlighten you regarding the perforamnce and users interaction wtih your website as it collates various key metrics from the analytics of the website.
+  Comparing your website to industry standards can be misleading as your own expected results may differ from the norms however the information below is a good guidline to show you how your website is performing 
+  compared to various industry standards taken from thousands of websites.
+</p>
 
 <form class="row g-3" action="process_csv.php" method="POST" enctype="multipart/form-data">
     <div class="col-md-auto">
@@ -72,9 +62,9 @@ if (isset($_SESSION['errors'])) {
         <label class="input-group-text" for="audience">Audience</label>
         <select class="form-select" id="audience" name="audience">
             <option selected>Choose...</option>
-            <option value="1">General Public</option>
-            <option value="2">Patients</option>
-            <option value="3">Healthcare Professionals</option>
+            <option value="General Public">General Public</option>
+            <option value="Patients">Patients</option>
+            <option value="Healthcare Professionals">Healthcare Professionals</option>
         </select>
     </div>
     <div class="col-md-auto">

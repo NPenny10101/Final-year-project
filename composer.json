@@ -1,0 +1,19 @@
+{
+    "name": "npenny101/final-year-project",
+    "description": "composer for lighthouse connectivity",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Npenny101\\FinalYearProject\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "NPenny10101",
+            "email": "162475982+NPenny10101@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "spatie/lighthouse-php": "^1.2"
+    }
+}
