@@ -44,7 +44,7 @@ h1 {
 }
 
 h3 {
-    font-size: 18px;
+    font-size: 20px !important;
     font-weight: bold;
     color: #333; /* Dark gray color */
     text-align: center;
@@ -55,6 +55,7 @@ h3 {
 }
 
 .block {
+    position: relative;
     box-sizing: border-box;
     padding: 20px;
     margin-bottom: 20px;
@@ -63,6 +64,7 @@ h3 {
     margin: 20px auto; /* Centering the block */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Adding a subtle shadow */
+    border: 3px solid #1d1d1d; /* Optional: adds border around the block */
 }
 
 .block h2 {
@@ -72,7 +74,7 @@ h3 {
 
 .block p {
     margin-bottom: 0;
-    color: #666;
+    color: #000000;
 }
 
 .good {

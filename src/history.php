@@ -47,7 +47,7 @@ if ($conn->connect_error) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles/style.css">
     <script>
-        function sortTable(columnIndex, type) {
+/*         function sortTable(columnIndex, type) {
             var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
             table = document.getElementById("myTable");
             switching = true;
@@ -84,7 +84,98 @@ if ($conn->connect_error) {
                     }
                 }
             }
+        } */
+
+/*         function partition(rows, low, high, columnIndex, type) {
+            const pivot = rows[high].getElementsByTagName("TD")[columnIndex];
+            let i = low - 1;
+
+            for (let j = low; j <= high - 1; j++) {
+                let current = rows[j].getElementsByTagName("TD")[columnIndex];
+                if ((type === 'num' ? parseFloat(current.innerHTML) : current.innerHTML.toLowerCase()) <
+                    (type === 'num' ? parseFloat(pivot.innerHTML) : pivot.innerHTML.toLowerCase())) {
+                    i++;
+                    rows[i].parentNode.insertBefore(rows[j], rows[i]);
+                }
+            }
+            rows[i + 1].parentNode.insertBefore(rows[high], rows[i + 1]);
+            return i + 1;
         }
+
+        function quickSort(rows, low, high, columnIndex, type) {
+            if (low < high) {
+                let pi = partition(rows, low, high, columnIndex, type);
+                quickSort(rows, low, pi - 1, columnIndex, type);
+                quickSort(rows, pi + 1, high, columnIndex, type);
+            }
+        } */
+
+        function sortTable(columnIndex, type) {
+            var table = document.getElementById("myTable");
+            var tbody = table.getElementsByTagName('tbody')[0];
+            var rows = Array.prototype.slice.call(tbody.getElementsByTagName("tr"));
+
+            // Toggle the sorting direction
+            if (table.getAttribute('data-sort-column') == columnIndex && table.getAttribute('data-sort-direction') == 'asc') {
+                table.setAttribute('data-sort-direction', 'desc');
+            } else {
+                table.setAttribute('data-sort-column', columnIndex);
+                table.setAttribute('data-sort-direction', 'asc');
+            }
+            var sortDirection = table.getAttribute('data-sort-direction');
+
+            rows.sort(function(a, b) {
+                var x = a.getElementsByTagName("TD")[columnIndex];
+                var y = b.getElementsByTagName("TD")[columnIndex];
+                x = type === 'num' ? parseFloat(x.innerHTML) : x.innerHTML.toLowerCase();
+                y = type === 'num' ? parseFloat(y.innerHTML) : y.innerHTML.toLowerCase();
+
+                // Apply sorting direction
+                if (sortDirection === 'asc') {
+                    return x > y ? 1 : (x < y ? -1 : 0);
+                } else {
+                    return x < y ? 1 : (x > y ? -1 : 0);
+                }
+            });
+
+            // Reinsert sorted rows
+            for (var i = 0; i < rows.length; i++) {
+                tbody.appendChild(rows[i]);
+            }
+        }
+
+
+
+
+
+        var currentPage = 1;
+        var recordsPerPage = 10;
+
+        function changePage(page) {
+            var btn_next = document.getElementById("btn_next");
+            var btn_prev = document.getElementById("btn_prev");
+            var listing_table = document.getElementById("myTable");
+            var rows = listing_table.getElementsByTagName("tr");
+            var numPages = Math.ceil((rows.length - 1) / recordsPerPage); // Exclude the header row
+
+            if (page < 1) page = 1;
+            if (page > numPages) page = numPages;
+
+            for (var i = 1; i < rows.length; i++) { // Start with 1 to avoid the header
+                rows[i].style.display = "none";
+            }
+
+            for (var i = (page - 1) * recordsPerPage + 1; i < (page * recordsPerPage) + 1; i++) {
+                if (rows[i]) rows[i].style.display = "";
+            }
+
+            btn_prev.style.display = (page == 1) ? "none" : "inline";
+            btn_next.style.display = (page == numPages) ? "none" : "inline";
+        }
+
+        window.onload = function() {
+            changePage(1);
+        };
 
     </script>
 </head>
@@ -122,8 +213,8 @@ if ($conn->connect_error) {
 </nav>
 
 
-  <header>Analytics Reports</header>
-  <p>description of the tool</p>
+  <h1>Past Analytics Reports</h1>
+  <p>This page will provide a summary for the all of the past repots that have been submitted and are currently stored in our database. To sort this table please click on the headers of the column you wish to order by.</p>
 
   <div class="search-container mb-3">
       <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for URLs..." class="form-control">
@@ -171,6 +262,11 @@ if ($conn->connect_error) {
           ?>
       </tbody>
   </table>
+
+  <div id="pagination_controls">
+        <button id="btn_prev" onclick="changePage(currentPage - 1);">Prev</button>
+        <button id="btn_next" onclick="changePage(currentPage + 1);">Next</button>
+  </div>
 
 <script> 
     function searchTable() {

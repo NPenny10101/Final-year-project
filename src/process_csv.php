@@ -8,6 +8,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $_SESSION['errors'][] = "Please upload a CSV file.";
       header("Location: home.php");
       exit();
+  } elseif ($_FILES['csvFile']['type'] != 'text/csv' && $_FILES['csvFile']['type'] != 'application/vnd.ms-excel') {
+    $_SESSION['errors'][] = "Please upload a CSV file.";
+    header("Location: home.php");
+    exit();
   }
 
   // Check if URL is provided 
@@ -62,6 +66,11 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
             // Use the first row of the CSV file as the header
             if ($rowIndex === 0) {
+                if($row != 'visitId,visitNumber,visitStartTime,date,pageviews,timeOnSite,bounces,source,medium,isTrueDirect,browser,isMobile,deviceCategory,subContinent,country,isInteraction,isEntrance,isExit,pageTitle,fullVisitorId,channelGrouping'){
+                  $_SESSION['errors'][] = "Please ensure your CSV abides by our standards otherwise the report will not work";
+                  header("Location: home.php");
+                  exit();
+                }
                 $header = $data;
                 continue; // Skip processing the header row
             }            
@@ -99,6 +108,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
       $IE = 0;
       $firefox = 0;
       $safari = 0;
+      $edge = 0;
       $organic = 0;
       $direct = 0;
       $paid = 0;
@@ -135,6 +145,8 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
                     $firefox = $firefox + 1;
                   }elseif ($row['browser'] == 'Internet Explorer'){
                     $IE = $IE + 1;
+                  }elseif ($row['browser'] == 'Edge'){
+                    $edge = $edge + 1;
                   }
 
                   if($row['deviceCategory'] == 'desktop'){
@@ -346,26 +358,11 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         $averageVisitorsPerDay = $numVisits / ($daysDifference + 1);
         $averageVisitorsPer30Days =  $averageVisitorsPerDay * 30;
 
-        // Given monthly views statistics
-        $monthlyViewsStats = array(
-          array(1001, 15000, 0.46),   // 1,001-15K monthly views (46%)
-          array(15001, 50000, 0.193), // 15,001-50K monthly views (19.3%)
-          array(50001, 250000, 0.232), // 50,001-250K monthly views (23.2%)
-          array(250001, 10000000, 0.11), // 250,001-10M monthly views (11%)
-          array(10000001, PHP_INT_MAX, 0.005) // 10M+ monthly views (0.5%)
-        );
-
         // Given minimum standard deviation
         $minStandardDeviation = 0.1; // 10%
 
         // Calculate the lower bound of the acceptable range
-        $lowerBound = 0;
-        foreach ($monthlyViewsStats as $stat) {
-          if ($stat[2] < $minStandardDeviation) {
-              $lowerBound = $stat[0];
-              break;
-          }
-        }
+
         
         // bounce rate analysis
 
@@ -422,141 +419,13 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
 
 
-        // LIGHTHOUSE REPORT
-        // Function to generate Lighthouse report for a given URL and extract the performance score
-
-
-        //require 'C:\xampp\htdocs\project\Final-year-project\vendor\autoload.php';
-
-        //$report = Lighthouse::url($url);
-
-        // // Example URL provided by the user
-        // $url = "https://www.cardiffhalfmarathon.co.uk/";
-        
-        // // Function to get performance metrics and accessibility information for a given URl
-
-
-        
-        // function getPerformanceMetricsFromURL($url) {
-        //     try {
-        //         // Create a new Lighthouse instance for the specified URL.
-        //         $lighthouse = Lighthouse::url($url);
-        
-        //         // Configure categories, adjust as required based on available methods.
-        //         $lighthouse->categories(['performance', 'accessibility', 'seo']);  // Assuming these categories can be set directly.
-        
-        //         // Prepare the command arguments.
-        //         $arguments = $lighthouse->lighthouseScriptArguments();
-        //         $nodePath = (new \Symfony\Component\Process\ExecutableFinder())->find('node');
-                
-        //         // Ensure arguments are flattened and converted to strings, as needed.
-        //         $command = array_merge([$nodePath, __DIR__ . '/../vendor/spatie/lighthouse-php/bin/lighthouse.js'], array_map('strval', $arguments));
-                
-        //         // Initialize the process.
-        //         $process = new Process($command);
-        //         $process->run();
-        
-        //         // Handling process output
-        //         if (!$process->isSuccessful()) {
-        //             throw new ProcessFailedException($process);
-        //         }
-        
-        //         // Decode the JSON results
-        //         $result = json_decode($process->getOutput(), true);
-        
-        //         // Extract the necessary data
-        //         $results = [];
-        //         if (isset($result['categories'])) {
-        //             foreach (['performance', 'accessibility', 'seo'] as $category) {
-        //                 if (isset($result['categories'][$category])) {
-        //                     $results[$category . '_score'] = $result['categories'][$category]['score'] * 100;
-        //                     if (isset($result['categories'][$category]['audits'])) {
-        //                         $results[$category . '_opportunities'] = $result['categories'][$category]['audits'];
-        //                     }
-        //                 }
-        //             }
-        //         }
-        
-        //         return $results;
-        //     } catch (\Exception $e) {
-        //         // If an error occurs, return the error message.
-        //         return ['error' => $e->getMessage()];
-        //     }
-        // }
-      
-      
-        // function keyScores($url){
-        //   $result = Lighthouse::url($url)->run();
-
-        //   $result->scores();
-        // }
-        
-        // $lighthouse = keyScores($url);
-        // //$lighthouse = getPerformanceMetricsFromURL($url);
-        // print_r($lighthouse);
-
-
-      //   require __DIR__ . '/vendor/autoload.php';
-
-        
-      //   // Example URL provided by the user
-      //   $url = "https://www.cardiffhalfmarathon.co.uk/";
-        
-      //   // Function to get performance metrics and accessibility information for a given URL
-      //   function getPerformanceMetricsFromURL($url) {
-      //     try {
-      //         $puppeteer = new Puppeteer();
-      //         $browser = $puppeteer->launch();
-      //         $page = $browser->newPage();
-          
-      //         // Navigate to the URL
-      //         $page->goto($url);
-          
-      //         // Assuming direct support for Lighthouse is available
-      //         $lighthouseReport = $page->lighthouse(['onlyCategories' => ['performance', 'accessibility', 'seo']]);
-          
-      //         // Extract metrics from the report
-      //         $metrics = [
-      //             'performance_score' => $lighthouseReport->categories->performance->score * 100,
-      //             'accessibility_score' => $lighthouseReport->categories->accessibility->score * 100,
-      //             'seo_score' => $lighthouseReport->categories->seo->score * 100,
-      //         ];
-          
-      //         // Assuming audits are structured in a way that allows this type of iteration
-      //         if (isset($lighthouseReport->audits)) {
-      //             foreach ($lighthouseReport->audits as $audit) {
-      //                 if ($audit->scoreDisplayMode === 'manual' && $audit->result === 'failed') {
-      //                     $metrics['accessibility_opportunities'][] = $audit->title;
-      //                 }
-      //             }
-      //         }
-          
-      //         $browser->close();
-          
-      //         return $metrics;
-      //     } catch (\Exception $e) {
-      //         // Log or handle exceptions appropriately
-      //         error_log('Error retrieving Lighthouse metrics: ' . $e->getMessage());
-      //         return ['error' => $e->getMessage()];
-      //     }
-      // }
-      
-      
-        
-      //   $lighthouse = getPerformanceMetricsFromURL($url);
-      //   print_r($lighthouse);   
+        //Lighthouse report to gather key metrics regarding the url submitted
         
         function getLighthouseScores($url) {
           // Define the command to execute Lighthouse for specific categories
           $command = "lighthouse --output=json --output-path=report.json \"$url\"";
       
-          // Execute the command and redirect error output to standard output to capture it
-          exec($command . ' 2>&1', $output, $return);
-      
-          // Debugging the command output and return status
-          // echo "Return status: $return\n";
-          // print_r($output);
-      
+          exec($command . ' 2>&1', $output, $return);  
           if ($return === 0) {
               // Check if the report file was generated
               if (!file_exists('report.json')) {
@@ -625,84 +494,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
           }
       }      
       $lighthouse = getLighthouseScores($url);
-      print_r($lighthouse);
-
- 
-/*         // Example URL provided by the user
-        $url = "https://www.cardiffhalfmarathon.co.uk/";
-
-        // Get the performance score for the provided URL
-        // Function to get performance metrics and accessibility information for a given URL
-        function getPerformanceMetricsFromURL($url) {
-          // Define the command to execute Lighthouse
-          $command = "lighthouse --output=json --output-path=report.json $url";
-
-          // Execute the command
-          exec($command, $output, $return);
-
-          // Check if Lighthouse command executed successfully
-          if ($return === 0) {
-              // Read the generated report
-              $report = file_get_contents('report.json');
-
-              // Call the function to extract metrics from the report
-              return getPerformanceMetrics($report);
-          } else {
-              // Lighthouse command failed
-              return null;
-          }
-        }
-
-        // Function to get performance metrics and accessibility information from a Lighthouse report
-        function getPerformanceMetrics($report) {
-          // Decode the JSON report
-          $reportData = json_decode($report, true);
-      
-          // Initialize an array to store the results
-          $metrics = [];
-      
-          // Check if the report data is valid
-          if ($reportData !== null) {
-              // Extract performance score
-              if (isset($reportData['categories']['performance']['score'])) {
-                  $metrics['performance_score'] = $reportData['categories']['performance']['score'] * 100;
-              } else {
-                  $metrics['performance_score'] = null;
-              }
-      
-              // Extract accessibility score
-              if (isset($reportData['categories']['accessibility']['score'])) {
-                  $metrics['accessibility_score'] = $reportData['categories']['accessibility']['score'] * 100;
-              } else {
-                  $metrics['accessibility_score'] = null;
-              }
-      
-              // Extract accessibility opportunities
-              if (isset($reportData['categories']['accessibility']['auditRefs'])) {
-                  $opportunities = [];
-                  foreach ($reportData['categories']['accessibility']['auditRefs'] as $auditRef) {
-                      // Check if the necessary keys are present before accessing them
-                      if (isset($auditRef['scoreDisplayMode']) && isset($auditRef['result']) && $auditRef['scoreDisplayMode'] === 'manual' && $auditRef['result'] === 'failed') {
-                          $opportunities[] = $auditRef['description'];
-                      }
-                  }
-                  $metrics['accessibility_opportunities'] = $opportunities;
-              } else {
-                  $metrics['accessibility_opportunities'] = [];
-              }
-          } else {
-              // Invalid report data
-              $metrics['performance_score'] = null;
-              $metrics['accessibility_score'] = null;
-              $metrics['accessibility_opportunities'] = [];
-          }
-      
-          return $metrics;
-      }
-
-
-        $lighthouse = getPerformanceMetricsFromURL($url);
-        print_r($lighthouse); */
+      //print_r($lighthouse);
 
 
 
@@ -724,27 +516,28 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
               ['visitors' => 200, 'avg_time_spent' => 45, 'country' => 'UK', 'bounce_rate' => 25, 'pageviews' => 180, 'browser' => 'Firefox'],
               // More data points...
           ]; */
+            // Check if the URL is already in the database
+            $sqlCheck = "SELECT web_Id FROM website WHERE url = ?";
+            $stmtCheck = $conn->prepare($sqlCheck);
+            $stmtCheck->bind_param("s", $url);
+            $stmtCheck->execute();
+            $result = $stmtCheck->get_result();
+            $exists = $result->fetch_assoc();
+            $stmtCheck->close();
 
-
-      //      $sql1 = "INSERT INTO `website` ( `url`, `audience`, `site_location`) VALUES ('youtube.com', 'general public', 'e-commerce', 'USA')";
-            $sql1 = "INSERT INTO `website` (`url`, `audience`, `site_location`) VALUES (?, ?, ?)";
-            $stmt1 = $conn->prepare($sql1);
-            $stmt1->bind_param("sss", $url, $audience, $site_location);
-
-            // Set parameter values
-            //$url = "youtube.com";
-            //$audience = "general public";
-            //$type = "e-commerce";
-            // $site_location = "USA";
-
-            // Execute the statement
-            //$stmt1->execute();
-
-            // Fetch the web_Id of the inserted row
-            $web_Id = $conn->insert_id;
-
-            // Close the statement
-            $stmt1->close();
+            if ($exists) {
+                $web_Id = $exists['web_Id'];
+            } else {
+                $sql1 = "INSERT INTO `website` (`url`, `audience`, `site_location`) VALUES (?, ?, ?)";
+                $stmt1 = $conn->prepare($sql1);
+                $stmt1->bind_param("sss", $url, $audience, $site_location);
+                // Execute the statement
+                //$stmt1->execute();
+                // Fetch the web_Id of the inserted row
+                $web_Id = $conn->insert_id;
+                // Close the statement
+                $stmt1->close();
+            }
 
 
 
@@ -800,7 +593,8 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         } else {
             echo "Error: " . mysqli_error($conn);
         }
- */               $sql = "SELECT w.*, r.*, s.*
+ */
+                 $sql = "SELECT w.*, r.*, s.*
                   FROM website w
                   JOIN reports r ON w.web_Id = r.web_Id
                   JOIN source s ON r.report_Id = s.report_Id";
@@ -824,142 +618,143 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
           
           // Close connection
           $result->close();
+          //print_r($dBDataset);
 
 
-            // machine learning algorithm
-
-            function dbscan($dataset, $epsilon, $minPts) {
-                $clusters = array();
-                $clusterId = 0;
-
-
-                foreach ($dataset as $pointKey => &$point) {
-                    if (!is_null($point['cluster'])) continue; // Already assigned to a cluster
-                    
-                    $neighbors = regionQuery($dataset, $point, $epsilon);
-                    
-                    if (count($neighbors) < $minPts) {
-                        $point['cluster'] = -1; // Noise
-                    } else {
-                        $clusterId++;
-                        expandCluster($dataset, $point, $neighbors, $clusterId, $epsilon, $minPts);
+          // k-means plus algorithm for clustering
+          function initializeCentroids(array $dataset, $k) {
+            $centroids = array();
+            $firstKey = array_rand($dataset);
+            $centroids[] = $dataset[$firstKey];
+        
+            for ($i = 1; $i < $k; $i++) {
+                $distances = array();
+                foreach ($dataset as $dataPoint) {
+                    $minDist = INF;
+                    foreach ($centroids as $centroid) {
+                        $dist = calculateDistance($dataPoint, $centroid);
+                        $minDist = min($minDist, $dist);
                     }
+                    $distances[] = $minDist;
                 }
-                
-                return $dataset;
-            }
-
-            function regionQuery($dataset, $point, $epsilon) {
-                $neighbors = array();
-                
-                foreach ($dataset as $neighborKey => $neighbor) {
-                    if (calculateDistance($point, $neighbor) <= $epsilon) {
-                        $neighbors[$neighborKey] = $neighbor;
-                    }
+                $total = array_sum($distances);
+                $probabilities = array_map(function($dist) use ($total) { return $dist / $total; }, $distances);
+                $cumulativeProbabilities = array();
+                $cumSum = 0;
+                foreach ($probabilities as $p) {
+                    $cumSum += $p;
+                    $cumulativeProbabilities[] = $cumSum;
                 }
-                
-                return $neighbors;
-            }
-
-            function expandCluster(&$dataset, $point, $neighbors, $clusterId, $epsilon, $minPts) {
-                $point['cluster'] = $clusterId;
-                
-                foreach ($neighbors as $neighborKey => &$neighbor) {
-                    if (is_null($neighbor['cluster'])) { // Unassigned or marked as noise
-                        $neighbor['cluster'] = $clusterId;
-                        $newNeighbors = regionQuery($dataset, $neighbor, $epsilon);
-                        
-                        if (count($newNeighbors) >= $minPts) {
-                            $neighbors += $newNeighbors;
-                        }
+                $random = mt_rand() / mt_getrandmax();
+                foreach ($cumulativeProbabilities as $index => $cumProb) {
+                    if ($random <= $cumProb) {
+                        $centroids[] = $dataset[$index];
+                        break;
                     }
                 }
             }
-
-            function calculateDistance($point1, $point2) {
-              // Ensure both points are arrays
-              if (!is_array($point1) || !is_array($point2)) {
-                  throw new InvalidArgumentException('Both inputs must be arrays');
-              }
-          
-              // Ensure both arrays have the same number of dimensions
-              if (count($point1) !== count($point2)) {
-                  throw new InvalidArgumentException('Both arrays must have the same number of dimensions');
-              }
-          
-              // Calculate Euclidean distance
-              $sum = 0;
-              foreach ($point1 as $key => $value) {
-                  $sum += pow((float)$value - (float)$point2[$key], 2); // Explicitly cast to float
-              }
-              return sqrt($sum);
+            return $centroids;
+        }
+        
+          function assignPointsToCentroids(array $dataset, array $centroids) {
+            $clusters = array();
+            foreach ($dataset as $point) {
+                $minDist = INF;
+                $cluster = 0;
+                foreach ($centroids as $key => $centroid) {
+                    $dist = calculateDistance($point, $centroid);
+                    if ($dist < $minDist) {
+                        $minDist = $dist;
+                        $cluster = $key;
+                    }
+                }
+                $clusters[$cluster][] = $point; 
+            }
+            return $clusters;
+          }
+        
+          function updateCentroids(array $clusters) {
+            $newCentroids = array();
+            foreach ($clusters as $cluster) {
+                $newCentroids[] = array_map(function($dim) {
+                    return array_sum($dim) / count($dim);
+                }, arrayTranspose($cluster));
+            }
+            return $newCentroids;
           }
 
-
-            foreach ($dBDataset as &$point) {
-              $point['cluster'] = null; // or any other default value you prefer
+          function arrayTranspose(array $array) {
+            $result = array();
+            foreach ($array as $sub) {
+                foreach ($sub as $k => $v) {
+                    $result[$k][] = $v;
+                }
             }
-
-            $epsilon = 1;
-            $minPts = 3;
-            $clusteredDataset = dbscan($dBDataset, $epsilon, $minPts);
-            //print_r($clusteredDataset);
-
-            // Prepare the data for the scatter plot
-            $dataPoints = [];
-            foreach ($clusteredDataset as $data) {
-                // Extract the relevant data points for the scatter plot
-                $x = $data['organic']; // Example: average time spent
-                $y = $data['paid']; // Example: bounce rate
-                $cluster = $data['cluster']; // Cluster ID
-
-                // Add the data point to the array
-                $dataPoints[] = ["x" => $x, "y" => $y, "cluster" => $cluster];
+            return $result;
+          }
+        
+          function calculateDistance(array $point1, array $point2) {
+            $metrics = ['visits', 'uniqueVisitors'];  // Only use these metrics for clustering
+            $sum = 0;
+            foreach ($metrics as $metric) {
+                $sum += pow(($point1[$metric] - $point2[$metric]), 2);
             }
-            
-
-            $jsonData = json_encode($clusteredDataset);
-
-            // Sort the dataset to ensure the last entry is the most recent
-            usort($clusteredDataset, function($a, $b) {
-              return strtotime($b['report_date']) - strtotime($a['report_date']); // Assuming 'date' is a date field in your dataset
-            });
-
-            // The most recent entry
-            $mostRecent = $clusteredDataset[0];
-            $mostRecentCluster = $mostRecent['cluster'];
-
-            // Finding similar websites in the same cluster
-            $similarWebsites = [];
-            foreach ($clusteredDataset as $website) {
-              if ($website['cluster'] == $mostRecentCluster && $website['web_Id'] != $mostRecent['web_Id']) {
-                  // Calculate distance
-                  $distance = calculateDistance($mostRecent, $website);
-                  $similarWebsites[$website['web_Id']] = $distance;
-              }
+            return sqrt($sum);
+          }
+        
+          function kMeans(array $dataset, $k, $maxIterations = 100) {
+            $centroids = initializeCentroids($dataset, $k);
+            $iterations = 0;
+            $clusters = array();
+        
+            while ($iterations++ < $maxIterations) {
+                $clusters = assignPointsToCentroids($dataset, $centroids);
+                $newCentroids = updateCentroids($clusters);
+                if ($newCentroids === $centroids) {
+                    break; // Centroids didn't change
+                }
+                $centroids = $newCentroids;
             }
+        
+            return $clusters;
+          }
+          $k = 3;  // Example: Number of clusters
+          $clusters = kMeans($dBDataset, $k);
+          $jsonData = json_encode($clusters);
 
-            // Sort websites by distance
-            asort($similarWebsites);
 
-            // Get the 4 most similar websites
-            $topFourSimilar = array_slice($similarWebsites, 0, 4, true);
-
-            // Fetching the details of these websites
-            $topFourDetails = [];
-            foreach ($topFourSimilar as $webId => $distance) {
-              foreach ($clusteredDataset as $entry) {
-                  if ($entry['web_Id'] == $webId) {
-                      $topFourDetails[$webId] = $entry;
-                      break;
-                  }
-              }
+          // Find the cluster for the known web_Id
+          function findDataPointAndCluster(array $clusters, $knownWebId) {
+            $result = array();
+            foreach ($clusters as $clusterId => $cluster) {
+                foreach ($cluster as $dataPoint) {
+                    if ($dataPoint['web_Id'] == $knownWebId) {
+                        $result['dataPoint'] = $dataPoint;
+                        $result['clusterId'] = $clusterId;
+                        return $result; // Return as soon as the desired data point is found
+                    }
+                }
             }
+            return $result; // Return an empty array if no matching web_Id is found
+          }
 
-            // Output or further process $topFourDetails as needed
-            print_r($topFourDetails);
+          $webId = 112; // this will be removed when the database excecutions are removed as well - for testing purposes
 
+          $dataPointInfo = findDataPointAndCluster($clusters, $webId);
+          $targetWebsite = $dataPointInfo['dataPoint'];
+          $clusterId = $dataPointInfo['clusterId'];
 
+          if (!empty($dataPointInfo)) {
+            echo "Found web_Id $webId in cluster " . $dataPointInfo['clusterId'] . ".\n";
+            print_r($dataPointInfo['dataPoint']); // This prints all the data for the web_Id within the cluster
+          } else {
+            echo "No data found for web_Id $webId.";
+          }
+        
+          // get the monthly number of visitors
+          $dailyVisitors = $numUniqueVisitorIds / ($daysDifference+1);
+          $numUniqueVisitorIds = $dailyVisitors * 30;
+        
         $conn->close();
 
 }
@@ -983,6 +778,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
     <title>Bootstrap demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdn.canvasjs.com/ga/canvasjs.min.js"></script>
 </head>
 <body>
@@ -1020,21 +816,22 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
 
 <h1>Key website analytic KPI's from your website</h1>
-<h3>stats are in a per month basis include the start and end date of the analytics here
-  comparing your website to industry standards can be misleading as your own expected results may differ however the information below is meant to show you how your website is performing 
-  compared to various industry standards taken from thousands of websites.
+<h3>Below you will find the report for <?php echo"$url" ?>.
 </h3>
 
 <div class="container">
-        <div class="block">
+        <div class="block" style="position: relative;">
             <h2>Unique Visitors: <?php echo"$numUniqueVisitorIds"; ?></h2>
-            <p> Unique visitors is the number of individual users that have visited your website over the course of 30 days. This metric can signal whether the marketing for your website is working effectively, 
-              however it is also very dependant on your expected results so if your target market is small then dont be discouraged from lower results.
+            <p> 
+              <b>Description: </b>Unique visitors is the number of individual users that have visited your website over the course of 30 days. <br>
+              <b>Why this is useful: </b> This metric can signal whether the marketing for your website is working effectively 
+              however, it is also very dependant on your expected results so if your target market is small then dont be discouraged from lower results. <br>
               </p>
               <?php
 
+
             // conditions to find the percentile of the unique visitors based on their audience
-            echo "<p>Your site has " . number_format($numUniqueVisitorIds) . " unique visitors per month, ";
+            echo "<p><b>Your site</b> has " . number_format($numUniqueVisitorIds) . " unique visitors per month, ";
 
             if($audience == 'Healthcare Professional'){ // B2B
                 if($numUniqueVisitorIds <= 10000){
@@ -1066,30 +863,31 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             ?>
         </div>
 
-        <div class="block">
+        <div class="block" title = "Hello world">
             <h2>Bounce Rate: <?php echo"$bouncerate"; ?>%</h2>
-            <p>The bounce rate is a metric used to measure the percentage of visitors who land on a single page of a website and then leave without interacting further with the site, 
+            <p><b>Description: </b>The bounce rate is a metric used to measure the percentage of visitors who land on a single page of a website and then leave without interacting further with the site, 
               a higher percentage means that more people are leaving without any interaction with the website. There are many factors that can affect the bounce rate of a website like its purpose, 
-              for example software websites average bounce rate is over 15% higher than and industry standard, not having your homepage as the most visited entry page can also cause an increase as users
-               may find what they are looking for immediately.
+              for example software websites average bounce rate is over 15% higher than and industry standard and not having your homepage as the most visited entry page can also cause an increase as users
+               may find what they are looking for immediately. <br>
+               <b>Why this is useful: </b> Although there is ambiguity as to how it cna be interpretted it is still a very good indicator of how engaging and user firendly your website is. <br>
+               This is the page with the most bounces on <?php echo"$topBounceratedPage";?> page from your website.
             </p>
               <?php
-
               // Check the value of the variable and display different content accordingly
               if ($bouncerate <= 40 ) {
                   // Display this content if $condition is true
-                  echo "<p>Your website has a very good bounce rate of $bouncerate%, there is no need for improvement in this area.</p>";
+                  echo "<p><b>Your website</b> has a very good bounce rate of $bouncerate%, there is no need for improvement in this area.</p>";
               } elseif ($bouncerate > 40 && $bouncerate <= 48) {
                   // Display this content if $condition is false
-                  echo "<p>Your websites bounce rate is jsut above average $bouncerate so there is no need for any improvements.</p>";
+                  echo "<p><b>Your websites</b> bounce rate is just above average with $bouncerate% so there is no need for any improvements.</p>";
               } elseif ($bouncerate > 48 && $bouncerate <= 65) { //65 is used as it is the average bouncerate for software companies
                 // Display this content if $condition is false
-                echo "<p>Your websites bounce rate is very poor: $bouncerate. Possible ways to reduce your high bounce rate are: 
+                echo "<p><b>Your websites</b> bounce rate is very poor: $bouncerate%. Possible ways to reduce your high bounce rate are: 
                 ensuring your website is mobile friendly as the majority of website visitors are now on mobile devices and
                 ensure that there are minimal distractions on the site like full screen pop ups. </p>";
               } elseif ($bouncerate > 65) {
                 // Display this content if $condition is false
-                echo "<p>Your websites bounce rate is very poor: $bouncerate. Possible ways to reduce your high bounce rate are: 
+                echo "<p><b>Your websites</b> bounce rate is very poor: $bouncerate%. Possible ways to reduce your high bounce rate are: 
                 ensuring your website is mobile friendly as the majority of website visitors are now on mobile devices and
                 ensure that there are minimal distractions on the site like full screen pop ups. </p>";
               }
@@ -1099,57 +897,57 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         <div class="block ">
             <h2>Average Time Spent on Site: <?php echo"$averageTimeOnSite"; ?> seconds</h2>
             <p>
-              The average time on a website, often referred to as "average session duration," measures the total duration that visitors spend on a website divided by the number of visits. 
-              This metric is useful because it indicates how engaging and relevant the website's content is to visitors. A longer average time suggests that visitors find the content valuable 
+            <b>Description: </b>The average time on a website, often referred to as "average session duration," measures the total duration that visitors spend on a website divided by the number of visits. <br>
+            <b>Why this is useful: </b>This metric is useful because it indicates how engaging and relevant the website's content is to visitors. A longer average time suggests that visitors find the content valuable 
               and are more likely to interact with it. Also on average users on mobile devices are likly to spend 3 minutes less time on the website.
             </p>
             <?php
             $avTimeClass = 'poor';
             $mobilePercentage = ($mobile+$tablet) / ($mobile+$desktop+$tablet) * 100;
             $desktopPercentage = $desktop / ($mobile+$desktop+$tablet) * 100;
-            //$keyMobileTimes
+            $averageMobileTime = 150;
+            $averageDesktopTime = 360;
 
-            if ($keyMobileTimes[1] >= 150  && $mobileOverThreshold >= 50) {
-              echo "<p>Mobile users are spending an above average time on the website.</p>";
-          } elseif ($keyMobileTimes[1] <= 150 && $mobileOverThreshold >= 50) {
-              echo "<p>Mobile users are spending less time on the website or the engagement level is low. Consider improving mobile user experience.</p>";
-          }elseif ($keyMobileTimes[1] >= 150 && $mobileOverThreshold <= 50) {
-            echo "<p>Mobile users are spending less time on the website or the engagement level is low. Consider improving mobile user experience.</p>";
-          } elseif ($keyMobileTimes[1] < 150 && $mobileOverThreshold < 50) {
-              echo "<p>Mobile users are spending less time on the website. It may indicate bad engagement.</p>";
-          }
-          
+            if ($keyMobileTimes[1] >= $averageMobileTime && $mobileOverThreshold >= 50) {
+                echo "<p><b>Mobile</b> users are spending an above-average time on the website, averaging {$keyMobileTimes[1]} minutes which is high compared to the expected {$averageMobileTime} minutes.</p>";
+            } elseif ($keyMobileTimes[1] < $averageMobileTime && $mobileOverThreshold >= 50) {
+                echo "<p><b>Mobile</b> users are spending less time on the website than expected, averaging {$keyMobileTimes[1]} minutes compared to the expected {$averageMobileTime} minutes. Even though most of the users are spending over the average time on the website please still consider improving mobile user experience.</p>";
+            } elseif ($keyMobileTimes[1] >= $averageMobileTime && $mobileOverThreshold < 50) {
+                echo "<p><b>Mobile</b> users, while spending more time on average ({$keyMobileTimes[1]} minutes) than the industry standard {$averageMobileTime}. Most of the users are still spending less than the standard amount of time on the website please consider improving mobile user experience..</p>";
+            } elseif ($keyMobileTimes[1] < $averageMobileTime && $mobileOverThreshold < 50) {
+                echo "<p><b>Mobile</b> users are not only spending less time on the website, averaging {$keyMobileTimes[1]} minutes, but also show low engagement levels. It may indicate poor mobile experience or unengaging content.</p>";
+            }
 
-          if ($keyDesktopTimes[1] >= 360 && $desktopOverThreshold >= 50) {
-              echo "<p>Desktop users are spending a sufficient amount of time on the website.</p>";
-          } elseif ($keyDesktopTimes[1] <= 360 || $desktopOverThreshold >= 50) {
-              echo "<p>Desktop users are spending an average time on the website or the engagement level is low. Optimize content for desktop users.</p>";
-          }elseif ($keyDesktopTimes[1] >= 360 || $desktopOverThreshold <= 50) {
-            echo "<p>Desktop users are spending an average time on the website or the engagement level is low. Optimize content for desktop users.</p>";
-          } elseif ($keyDesktopTimes[1] < 360 && $desktopOverThreshold < 50) {
-              echo "<p>Desktop users are spending less time on the website. It may indicate bad engagement.</p>";
-          }
+            if ($keyDesktopTimes[1] >= $averageDesktopTime && $desktopOverThreshold >= 50) {
+                echo "<p><b>Desktop</b> users are spending an above-average time on the website, averaging {$keyDesktopTimes[1]} minutes which is high compared to the expected {$averageDesktopTime} minutes.</p>";
+            } elseif ($keyDesktopTimes[1] < $averageDesktopTime && $desktopOverThreshold >= 50) {
+                echo "<p><b>Desktop</b> users are spending less time on the website than expected, averaging {$keyDesktopTimes[1]} minutes compared to the expected {$averageDesktopTime} minutes. Even though most users are spending over the average time on the website, please still consider optimizing content for desktop users.</p>";
+            } elseif ($keyDesktopTimes[1] >= $averageDesktopTime && $desktopOverThreshold < 50) {
+                echo "<p><b>Desktop</b> users, while spending more time on average ({$keyDesktopTimes[1]} minutes) than the industry standard {$averageDesktopTime} minutes, most of the users are still spending less than the standard amount of time on the website. Please consider optimizing content for desktop users.</p>";
+            } elseif ($keyDesktopTimes[1] < $averageDesktopTime && $desktopOverThreshold < 50) {
+                echo "<p><b>Desktop</b> users are not only spending less time on the website, averaging {$keyDesktopTimes[1]} minutes, but also show low engagement levels. It may indicate poor desktop experience or unengaging content.</p>";
+            }
             ?>
         </div>
 
         <div class="block">
             <h2>Average Page Views: <?php echo"$averagePageViews"; ?> pages</h2>
-            <p> Average page views per visit on a website represent the number of individual pages a visitor views during a single session. This metric is significant as it indicates user engagement and interest; 
+            <p> 
+            <b>Description: </b>Average page views per visit on a website represent the number of individual pages a visitor views during a single session. <br>
+            <b>Why this is useful: </b>This metric is significant as it indicates user engagement and interest; 
               higher page views can suggest that visitors find the content compelling or are deeply exploring what the site has to offer. This metric also helps in assessing the effectiveness of site layout and navigation, 
               as more intuitive designs tend to encourage more page views. For mobile users, the average page views are typically lower at 3.8 compared to desktop users, who average about 5.2 page views per session</p>
             <?php 
 
-            if($averagePageViews >= 5.2){
-              echo "<p> your page views are very good and in the top 10% </p>";
-            }elseif($averagePageViews >= 4){
-              echo "<p> your page views are very good and in the top 20% </p>";
-            }elseif($averagePageViews < 4 && $averagePageViews >= 2.5){
-              echo "<p> your page views per session is above average </p>";
-            }elseif($averagePageViews < 2.5 && $averagePageViews >= 1.4){
-              echo "<p> your page views per session is just below average </p>";
-            }elseif($averagePageViews < 1.4){
-              echo "<p> your page views are very bad and in the bottom 20% </p>";
-            }
+              if($averagePageViews >= 6.5){
+                echo "<p><b>Your page views</b> are very good and in the top 35%. Your average is {$averagePageViews}.</p>";
+              }elseif($averagePageViews < 6.5 && $averagePageViews >= 3.5){
+                echo "<p><b>Your page views</b> per session is as exptected due to 50% of websites having a similar number of pages per visit. Your average is {$averagePageViews}.</p>";
+              }elseif($averagePageViews < 3.5 && $averagePageViews >= 1){
+                echo "<p><b>Your page views</b> per session is in the bottom 15% of websites with an average of {$averagePageViews}. Please consider making you website more navigable and that the content is clearly laid out</p>";
+              }elseif($averagePageViews < 1){
+                echo "<p><b>Your page views</b> are very bad as your visitors dont seem to be moving off their landing page at all. Your average is {$averagePageViews}.</p>";
+              }
 
             ?>
         </div>
@@ -1157,8 +955,9 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         <div class="block">
             <h2>Referer Type</h2>
             <p>
-            The referrer type indicates where the visitors to your website are coming from, and it is useful for understanding your audience and how to better target them. 
-            If your website has no paid traffic then these comparisons will not be relevant as the results will be skewed
+            <b>Description: </b>The referrer type indicates how users are entering your website when given 4 categories: Organic, Paid, Referral and Direct. <br>
+            <b>Why this is useful: </b>it is useful for understanding your audience and how to better target them. If your website has no paid traffic then these comparisons will not be relevant as the results will be skewed. 
+            The below statistics show the percentage split between all referer types and their similarity with the industry average for that refere type.
             </p>
             <?php 
             $directPerc = $direct / ($direct + $paid + $organic + $referral) * 100; 
@@ -1172,33 +971,43 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             $baselinePaid = 29;
             $baselineReferral = 15;
 
-            // Tolerance level for considering percentages "similar"
-            $tolerance = 5; // Percentage points
-
             // Check if new report percentages are within the tolerance level of the baseline
-            function isSimilar($new, $baseline, $tolerance) {
-                return abs($new - $baseline) <= $tolerance;
+            $tolerance = 3; 
+
+            // Function to determine comparison result
+            function compareTraffic($percentage, $baseline, $tolerance) {
+                if (abs($percentage - $baseline) <= $tolerance) {
+                    return "similar";
+                } elseif ($percentage > $baseline) {
+                    return "higher";
+                } else {
+                    return "lower";
+                }
             }
-
-            // Check each type of traffic
-            $similarDirect = isSimilar($directPerc, $baselineDirect, $tolerance);
-            $similarPaid = isSimilar($paidPerc, $baselinePaid, $tolerance);
-            $similarOrganic = isSimilar($organicPerc, $baselineOrganic, $tolerance);
-            $similarReferral = isSimilar($referralPerc, $baselineReferral, $tolerance);
-
-            // Output the results
-            echo "<p>Direct Traffic is visitors who arrive by typing your URL directly into their browser. High direct traffic can indicate strong brand recognition: " . round($directPerc, 2) . "% - " . ($similarDirect ? "Similar" : "Not Similar") . "</p>";
-            echo "<p>Paid Traffic is visitors from paid advertisements, like Google Ads. This shows the effectiveness of your paid marketing efforts: " . round($paidPerc, 2) . "% - " . ($similarPaid ? "Similar" : "Not Similar") . "</p>";
-            echo "<p>Organic Traffic is visitors who come from a search engine result. Good organic traffic suggests effective SEO: " . round($organicPerc, 2) . "% - " . ($similarOrganic ? "Similar" : "Not Similar") . "</p>";
-            echo "<p>Referral Traffic is visitors who clicked on a link from another site. High referral traffic can mean good networking and presence on the web: " . round($referralPerc, 2) . "% - " . ($similarReferral ? "Similar" : "Not Similar") . "</p>";
-
+            
+            // Determine the comparison for each type of traffic
+            $comparisonDirect = compareTraffic($directPerc, $baselineDirect, $tolerance);
+            $comparisonPaid = compareTraffic($paidPerc, $baselinePaid, $tolerance);
+            $comparisonOrganic = compareTraffic($organicPerc, $baselineOrganic, $tolerance);
+            $comparisonReferral = compareTraffic($referralPerc, $baselineReferral, $tolerance);
+            
+            
+            echo "<p><b>Direct Traffic</b> is visitors who arrive by typing your URL directly into their browser. High direct traffic can indicate strong brand recognition: " . round($directPerc, 2) . "% - <b>$comparisonDirect</b> to the average.</p>";
+            echo "<p><b>Paid Traffic</b> is visitors from paid advertisements, like Google Ads. This shows the effectiveness of your paid marketing efforts: " . round($paidPerc, 2) . "% - <b>$comparisonPaid</b> to the average.</p>";
+            echo "<p><b>Organic Traffic</b> is visitors who come from a search engine result. Good organic traffic suggests effective SEO: " . round($organicPerc, 2) . "% - <b>$comparisonOrganic</b> to the average.</p>";
+            echo "<p><b>Referral Traffic</b> is visitors who clicked on a link from another site. High referral traffic can mean good networking and presence on the web: " . round($referralPerc, 2) . "% - <b>$comparisonReferral</b> to the average.</p>";
+            
             ?>
         </div>
 
         <div class="block">
             <h2>Device type</h2>
-            <p> there is a rise in mobile usage over the years 
-              67.9% is mobile now and mobile trafic is consistently spending less time and pages on the site</p>
+            <p> 
+            <b>Description: </b>This section shows the relationship between mobile and dekstop traffic on your website. <br>
+            <b>Why this is useful: </b>This is useful to know as there is a relationship between the device the user is on and how they interact with your website as shown in the 'Average Time Spend on Site' section. Mobile usage has been on the rise for 
+            the past few years and websites are expected to have more mobile traffic than desktop. <br>
+            <b>Description: </b>Below is a pie chart representing the percentage split for your website:
+              </p>
             <ul>
               <?php 
               $totalMobile = $mobile + $tablet;
@@ -1233,20 +1042,22 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
         <div class="block">
             <h2>Lighthouse</h2>
-            <p>Lighthouse is a tool created by Google that checks webpages for quality. 
-              It gives you reports on the webpage's performance, accessibility for users with disabilities, search engine optimization (SEO), and more, offering guidance on how to make the webpage better.
+            <p>
+            <b>Description: </b>Lighthouse is a tool created by Google that identifies key aspects of your website and provides scores out of 100. 
+              Lighthouse provides audits on the websites performance, accessibility (for users with disabilities), search engine optimization (SEO), and more, offering guidance on how to make the webpage better.
               Below i have shared the performance, SEO and accessibility score for your website as it currently is, therefore depending on the dates of the report you have shared this section may not be directly 
-              relevant the information you have uploaded. 
+              relevant the information you have uploaded. <br>
+            <b>Why this is useful: </b>Lighthouse scores can provide metrics and insights that are not available via standards analytics gathering tools.
             </p>
             <ul>
                 <?php 
-                echo "<li>Performance: " . categorizeScore($performance) . "</li>";
-                echo "<li>Accessibility: " . categorizeScore($accessibility) . "</li>";
-                echo "<li>SEO: " . categorizeScore($seo) . "</li>";
-                echo "<li>First Contentful paint: ". categorizeValue($lighthouse['FCP_score'], $lighthouse['FCP_value']) . "</li>";
-                echo "<li>Speed Index: ". categorizeValue($lighthouse['SI_score'], $lighthouse['SI_value']) . "</li>";
-                echo "<li>Largest Contentful paint: ". categorizeValue($lighthouse['LCP_score'], $lighthouse['LCP_value']) . "</li>";
-                echo "<li>Total Blocking Time: ". categorizeValue($lighthouse['TBT_score'], $lighthouse['TBT_value']) . "</li>";
+                echo "<li><b>Performance</b>: " . categorizeScore($performance) . "</li>";
+                echo "<li><b>Accessibility</b>: " . categorizeScore($accessibility) . "</li>";
+                echo "<li><b>SEO</b>: " . categorizeScore($seo) . ". SEO is the measure of how visible your website is for search engines like Google to pick up.</li>";
+                echo "<li><b>First Contentful paint(FCP)</b>: ". categorizeValue($lighthouse['FCP_score'], $lighthouse['FCP_value']). ". This marks the first point in the page load timeline where the user can see anything on the screen. Fast FCP reasurres the user that something is happening</li>";
+                echo "<li><b>Speed Index</b>: ". categorizeValue($lighthouse['SI_score'], $lighthouse['SI_value']) . ". Speed Index measures how quickly content is visually displayed during page load.</li>";
+                echo "<li><b>Largest Contentful paint(LCP)</b>: ". categorizeValue($lighthouse['LCP_score'], $lighthouse['LCP_value']) . ".This marks the point in the page load timeline when the page's main content has likely loaded.</li>";
+                echo "<li><b>Total Blocking Time</b>: ". categorizeValue($lighthouse['TBT_score'], $lighthouse['TBT_value']) . "It measures the total time after FCP where the main thread was blocked for long enough to prevent responses to user input. A low TBT helps ensure that the page is usable.</li>";
                 ?>
             </ul> 
             
@@ -1281,11 +1092,13 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
         <div class="block">
             <h2>General Information - Browser - Entry/Exit Pages</h2>
-            <p>Understanding the most common browsers used by visitors to your website helps in optimizing the site's performance and compatibility. 
+            <p>
+            <b>Description: </b> This block displays the most common browser types that are used to run your website and also the top entry/exit pages. <br>
+            <b>Why this is useful: </b>Understanding the most common browsers used by visitors to your website helps in optimizing the site's performance and compatibility. 
               Similarly, knowing the top entry and exit pages can shed light on user behavior and content effectiveness.</p>
             <?php
             // Assume $totalVisits holds the total number of visits, to calculate the percentages
-            $totalVisits = $chrome + $IE + $firefox + $safari;
+            $totalVisits = $chrome + $IE + $firefox + $safari + $edge;
 
             echo "<p>Browser Usage:</p>";
             echo "<ul>";
@@ -1293,50 +1106,119 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             echo "<li>Internet Explorer: " . round($IE / $totalVisits * 100, 2) . "%</li>";
             echo "<li>Firefox: " . round($firefox / $totalVisits * 100, 2) . "%</li>";
             echo "<li>Safari: " . round($safari / $totalVisits * 100, 2) . "%</li>";
+            echo "<li>Microsoft Edge: " . round($edge / $totalVisits * 100, 2) . "%</li>";
             echo "</ul>";
 
-            echo "<p>Top Entry Page: " . htmlspecialchars($topEntryPage) . "</p>";
+            echo "<p><b>Top Entry Page:</b> " . htmlspecialchars($topEntryPage) . "</p>";
             echo "<p>This is the first page that users visit on your site and can indicate the most engaging content or the effectiveness of your marketing efforts. Usually this would be the 
             homepage unless there are any promotions for specific pages that you are running.</p>";
 
-            echo "<p>Top Exit Page: " . htmlspecialchars($topExitPage) . "</p>";
+            echo "<p><b>Top Exit Page:</b> " . htmlspecialchars($topExitPage) . "</p>";
             echo "<p>This is the last page users visit before leaving your site. A high exit rate on specific pages may signal areas where the user experience can be improved to retain visitors.</p>";
             ?>
         </div>
 
+        <div class="block">
+            <h2>How your website compares against similar websites</h2>
+            <p><b>Description: </b>In this block we compare your websites metrics against websites that are deemed to be similar by our machine learning program.
+              <b>Why it is useful: </b> The statistics provide a different perspective on your websites performance especially as some industry standards are very subjective to the type of website they are used on. This section aims to eliminate that subjectivity.
+            </p>
+            <ul>
+                <?php
+                $metrics = ['SEO', 'performance', 'accessibility', 'bounceRate', 'averageTime', 'pageViews'];
+                $averages = array_fill_keys($metrics, 0);
+                $count = count($clusters[$clusterId]);
+                $tolerance = 5; // Tolerance in percentage
 
+                // Calculate averages for the cluster
+                foreach ($clusters[$clusterId] as $website) {
+                    foreach ($metrics as $metric) {
+                        $averages[$metric] += $website[$metric];
+                    }
+                }
+
+                foreach ($metrics as $metric) {
+                    $averages[$metric] /= $count; // Get average per metric
+                }
+
+                // Compare target website metrics to cluster averages
+                foreach ($metrics as $metric) {
+                  if ($averages[$metric] != 0) { // To avoid division by zero
+                      $percentageDifference = (($targetWebsite[$metric] - $averages[$metric]) / $averages[$metric]) * 100;
+                      $absPercentageDifference = abs($percentageDifference);
+            
+                      if ($absPercentageDifference <= $tolerance) {
+                        $comparison = 'similar';
+                        echo "<li>Your website's <b>$metric</b> is <b>$comparison</b> to the cluster average as the difference is within the tolerance level of the result.</li>";
+                      } else {
+                        $comparison = $percentageDifference > 0 ? 'better' : 'worse';
+                        echo "<li>Your website's <b>$metric</b> is <b>$comparison</b> than the cluster average by <b>" . number_format($absPercentageDifference, 2) . "%</b>.</li>";
+                      } 
+      
+                  } else {
+                        echo "<li>The average <b>$metric</b> for the cluster is zero, making a percentage comparison not meaningful.</li>";
+                  }
+                }
+                ?>
+            </ul>
+        </div>
+      
   </div>
   <div id="scatterChartContainer" style="height: 700px; width: 100%;"></div>
 
-    <script>
-        // Parse the JSON data passed from PHP
-        var data = <?php echo $jsonData; ?>;
-        console.log(data); // Log the received data to verify
+  <script>
+    var data = <?php echo $jsonData; ?>; // Parses JSON data from PHP into a JavaScript object
+    console.log(data); // Outputs parsed data to the console
 
-        // Prepare data for CanvasJS
-        var dataPoints = [];
-        for (var i = 0; i < data.length; i++) {
-            dataPoints.push({ x: data[i].organic, y: data[i].paid, color: data[i].cluster });
-        }
+    // Map for cluster colors
+    var clusterColors = {
+        1: "#FF5733", // Cluster ID 1
+        2: "#33FF57", // Cluster ID 2
+        3: "#3357FF", // Cluster ID 3
+    };
 
-        // Create scatter plot using CanvasJS
-        var chart = new CanvasJS.Chart("scatterChartContainer", {
-            title: {
-                text: "Clustered Dataset"
-            },
-            data: [{
-                type: "scatter",
-                markerSize: 5,
-                toolTipContent: "<b>{color}</b><br/>Average Time: {x}, Bounce Rate: {y}%",
-                dataPoints: dataPoints
-            }]
-        });
+    // Prepare data for visualization
+    var dataPoints = data.map(function(item) {
+        return {
+            x: parseFloat(item.visits), // Use 'visits' for the x-axis
+            y: parseFloat(item.uniqueVisitors), // Use 'uniqueVisitors' for the y-axis
+            markerColor: clusterColors[item.cluster], // Assign color based on cluster ID
+            markerSize: 5, // Adjust marker size
+            toolTipContent: "Cluster: " + item.cluster + "<br/>Visits: " + item.visits + "<br/>Unique Visitors: " + item.uniqueVisitors
+        };
+    });
 
-        // Render the chart
-        chart.render();
-    </script>
+    // Create a scatter plot using CanvasJS
+    var chart = new CanvasJS.Chart("scatterChartContainer", {
+        animationEnabled: true,
+        theme: "light2",
+        title: {
+            text: "Clustered Dataset Visualization"
+        },
+        axisX: {
+            title: "Number of Visits",
+            includeZero: false
+        },
+        axisY: {
+            title: "Unique Visitors",
+            includeZero: false
+        },
+        data: [{
+            type: "scatter",
+            dataPoints: dataPoints
+        }]
+    });
+
+    // Render the chart
+    chart.render();
+</script>
 
 
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script type="text/javascript" language="JavaScript" src="/scripts/script.js"></script>
 </body>
