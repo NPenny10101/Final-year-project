@@ -425,7 +425,6 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
 
     }
 
-//print_r($csvArray);
 
 
 
@@ -782,59 +781,6 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         </div>
       
   </div>
-  <div id="scatterChartContainer" style="height: 700px; width: 100%;"></div>
-
-  <script>
-    var data = <?php echo $jsonData; ?>; // Parses JSON data from PHP into a JavaScript object
-    console.log(data); // Outputs parsed data to the console
-
-    // Map for cluster colors
-    var clusterColors = {
-        1: "#FF5733", // Cluster ID 1
-        2: "#33FF57", // Cluster ID 2
-        3: "#3357FF", // Cluster ID 3
-    };
-
-    // Prepare data for visualization
-    var dataPoints = data.map(function(item) {
-        return {
-            x: parseFloat(item.visits), // Use 'visits' for the x-axis
-            y: parseFloat(item.uniqueVisitors), // Use 'uniqueVisitors' for the y-axis
-            markerColor: clusterColors[item.cluster], // Assign color based on cluster ID
-            markerSize: 5, // Adjust marker size
-            toolTipContent: "Cluster: " + item.cluster + "<br/>Visits: " + item.visits + "<br/>Unique Visitors: " + item.uniqueVisitors
-        };
-    });
-
-    // Create a scatter plot using CanvasJS
-    windows.onload = function() {
-    var chart = new CanvasJS.Chart("scatterChartContainer", {
-        animationEnabled: true,
-        theme: "light2",
-        title: {
-            text: "Clustered Dataset Visualization"
-        },
-        axisX: {
-            title: "Number of Visits",
-            includeZero: false
-        },
-        axisY: {
-            title: "Unique Visitors",
-            includeZero: false
-        },
-        data: [{
-            type: "scatter",
-            dataPoints: dataPoints
-        }]
-    });
-
-    // Render the chart
-    chart.render();
-  }
-</script>
-
-
-
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
