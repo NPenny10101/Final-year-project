@@ -2,6 +2,7 @@
 
 include 'header.php';
 include 'config.php';
+include 'database_functions.php';
 
 
 

@@ -30,7 +30,9 @@ function insertReport( $web_Id, $details) {
     $sql = "INSERT INTO `reports` (`web_Id`, `dateRange`, `date`, `report_date`, `visits`, `uniqueVisitors`, `averageTime`, `pageViews`, `bounceRate`, `performance`, `accessibility`, `SEO`) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iissiiiiiiii", $web_Id, $details['daysDifference'], $details['earliestDate'], $details['currentDateTime'], $details['numVisits'], $details['numUniqueVisitorIds'], $details['averageTimeOnSite'], $details['averagePageViews'], $details['bouncerate'], $details['performance'], $details['accessibility'], $details['seo']);
+    $stmt->bind_param("iissiiiiiiii", $web_Id, $details['daysDifference'], $details['earliestDate'], $details['currentDateTime'], 
+                    $details['numVisits'], $details['numUniqueVisitorIds'], $details['averageTimeOnSite'], $details['averagePageViews'], $details['bouncerate'], 
+                    $details['performance'], $details['accessibility'], $details['seo']);
     $stmt->execute();
     $report_Id = $conn->insert_id;
     $stmt->close();
@@ -42,7 +44,9 @@ function insertSource($report_Id, $sourceDetails) {
     $sql = "INSERT INTO `source` (`report_Id`, `direct`, `organic`, `paid`, `referral`, `chrome`, `firefox`, `internetExplorer`, `safari`, `mobile`, `tablet`, `desktop`, `topCountry`, `entry_page`, `exit_page`) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiiiiiiiiiiisss", $report_Id, $sourceDetails['direct'], $sourceDetails['organic'], $sourceDetails['paid'], $sourceDetails['referral'], $sourceDetails['chrome'], $sourceDetails['firefox'], $sourceDetails['IE'], $sourceDetails['safari'], $sourceDetails['mobile'], $sourceDetails['tablet'], $sourceDetails['desktop'], $sourceDetails['topCountry'], $sourceDetails['topEntryPage'], $sourceDetails['topExitPage']);
+    $stmt->bind_param("iiiiiiiiiiiisss", $report_Id, $sourceDetails['direct'], $sourceDetails['organic'], $sourceDetails['paid'], $sourceDetails['referral'], 
+                    $sourceDetails['chrome'], $sourceDetails['firefox'], $sourceDetails['IE'], $sourceDetails['safari'], $sourceDetails['mobile'], $sourceDetails['tablet'], 
+                    $sourceDetails['desktop'], $sourceDetails['topCountry'], $sourceDetails['topEntryPage'], $sourceDetails['topExitPage']);
     $stmt->execute();
     $stmt->close();
 }

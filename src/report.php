@@ -347,7 +347,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         }
 */
 
-      //$web_Id = insertWebsite($url, $audience, $site_location);
+      $web_Id = insertWebsite($url, $audience, $site_location);
 
       $reportDetails =[
         'daysDifference' => $daysDifference,
@@ -363,7 +363,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         'seo'=> $lighthouse['seo_score']
         ];
 
-      //$report_Id = insertReport($web_Id, $reportDetails);
+      $report_Id = insertReport($web_Id, $reportDetails);
 
       $sourceDetails = [
         'direct' => $direct,
@@ -382,7 +382,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
         'topExitPage' => $topExitPage
       ];
 
-      //insertSource($report_Id, $sourceDetails);
+      insertSource($report_Id, $sourceDetails);
 
       $result = fetchAllData();
       
@@ -624,7 +624,7 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             <b>Description: </b>This section shows the relationship between mobile and dekstop traffic on your website. <br>
             <b>Why this is useful: </b>This is useful to know as there is a relationship between the device the user is on and how they interact with your website as shown in the 'Average Time Spend on Site' section. Mobile usage has been on the rise for 
             the past few years and websites are expected to have more mobile traffic than desktop. <br>
-            <b>Description: </b>Below is a pie chart representing the percentage split for your website:
+            <b>your results: </b>Below is a pie chart representing the percentage split for your website:
               </p>
             <ul>
               <?php 
@@ -669,9 +669,9 @@ if ((isset($parsedUrl['path']) && trim($parsedUrl['path'], '/') != '') || isset(
             </p>
             <ul>
                 <?php 
-                echo "<li><b>Performance</b>: " . categorizeScore($performance) . "</li>";
-                echo "<li><b>Accessibility</b>: " . categorizeScore($accessibility) . "</li>";
-                echo "<li><b>SEO</b>: " . categorizeScore($seo) . ". SEO is the measure of how visible your website is for search engines like Google to pick up.</li>";
+                echo "<li><b>Performance</b>: " . categorizeScore($lighthouse['performance_score']) . "</li>";
+                echo "<li><b>Accessibility</b>: " . categorizeScore($lighthouse['accessibility_score']) . "</li>";
+                echo "<li><b>SEO</b>: " . categorizeScore($lighthouse['seo_score']) . ". SEO is the measure of how visible your website is for search engines like Google to pick up.</li>";
                 echo "<li><b>First Contentful paint(FCP)</b>: ". categorizeValue($lighthouse['FCP_score'], $lighthouse['FCP_value']). ". This marks the first point in the page load timeline where the user can see anything on the screen. Fast FCP reasurres the user that something is happening</li>";
                 echo "<li><b>Speed Index</b>: ". categorizeValue($lighthouse['SI_score'], $lighthouse['SI_value']) . ". Speed Index measures how quickly content is visually displayed during page load.</li>";
                 echo "<li><b>Largest Contentful paint(LCP)</b>: ". categorizeValue($lighthouse['LCP_score'], $lighthouse['LCP_value']) . ".This marks the point in the page load timeline when the page's main content has likely loaded.</li>";

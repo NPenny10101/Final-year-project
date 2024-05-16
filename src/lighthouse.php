@@ -1,6 +1,6 @@
 <?php
 //Lighthouse report to gather key metrics regarding the url submitted
-
+print_r(getLighthouseScores('https://databox.com'));
 function getLighthouseScores($url) {
 // Define the command to execute Lighthouse for specific categories
 $command = "lighthouse --output=json --output-path=report.json \"$url\"";
