@@ -26,6 +26,15 @@ nav a {
 nav a:hover {
     background-color: #555;
 }
+.navbar-nav  {
+    width: 100%;
+    justify-content: center;
+}
+
+.nav-item {
+    margin-left: 10px;
+    margin-right: 10px;
+}
 footer {
     background-color: #333;
     color: #fff;
@@ -41,6 +50,17 @@ h1 {
     margin-top: 50px;
     margin-bottom: 20px;
     
+}
+
+
+form.row.g-3 {
+    display: flex;
+    justify-content: center;    
+    align-items: center;
+}
+
+.form-control, .form-select, .btn {
+    width: auto; /* Ensures controls are only as wide as their content */
 }
 
 h3 {
